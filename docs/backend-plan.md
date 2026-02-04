@@ -303,13 +303,7 @@ com.k44.STN
   - Request: `{ newCommanderUserId: number }`
 
 ## 2.4. Realtime события (строго по `events-spec.md`)
-Задачи: генерировать и доставлять события:
-- `SQUAD_MEMBER_JOINED`
-- `SQUAD_MEMBER_LEFT`
-- `SQUAD_MEMBER_KICKED` (+ `SQUAD_MEMBER_KICKED_SELF` по USER-каналу)
-- `SQUAD_UPDATED`
-- `COMMANDER_CHANGED`
-- `SQUAD_DISBANDED`
+Задачи: генерируем события согласно events-spec.md (канонический контракт)
 
 ## 2.5. Тесты
 Сценарии:
@@ -499,7 +493,7 @@ com.k44.STN
 # Этап 7. Realtime & Chat
 
 ## Цель
-Реализовать UC-13 и доставку доменных событий по `events-spec.md` через один WebSocket endpoint.
+Реализовать UC-13 и доставку доменных событий по `events-spec.md` через один WebSocket endpoint. WS errors использовать схему ErrorResponse из errors-spec.md (timestamp обязателен, details опционален)
 
 ## 7.1. WebSocket endpoint и аутентификация (строго по контракту)
 - Endpoint: **`/ws/chat`**

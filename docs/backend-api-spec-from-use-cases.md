@@ -435,7 +435,7 @@ X-Request-Id: abc-123
 
 **Response 200** — обновлённый `UserDto`.
 
-Ошибки: `400` (невалидный статус), `401`.
+Ошибки: `400` (невалидный статус),
 
 `403` — ACCOUNT_BLOCKED
 
@@ -1080,6 +1080,7 @@ X-Request-Id: abc-123
 ```json
 {
   "type": "ERROR",
+  "error": <ErrorResponse>
   "code": "FORBIDDEN",
   "message": "You are not allowed to send messages to this channel"
 }
@@ -1113,4 +1114,4 @@ X-Request-Id: abc-123
 }
 ```
 
-Детальная спецификация событий может быть описана отдельным документом, когда будет реализован базовый функционал API.
+Realtime events определены в events-spec.md (канонический контракт). Канал/формат — см. events-spec
