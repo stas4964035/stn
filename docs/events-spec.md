@@ -2,27 +2,24 @@
 
 Этот документ дополняет основные файлы спецификации backend API
 (`backend-api-spec-from-use-cases.md`, `admin-moderation-api.md`) и описывает
-формат и набор realtime-событий, которые сервер отправляет клиентам через WebSocket.
+формат и **минимальный набор realtime-событий**, которые сервер отправляет клиентам через WebSocket.
 
-Документ опирается на ТЗ и use-cases проекта и фиксирует контракт для событий,
-не относящихся к чат-сообщениям (чаты описаны отдельно в разделе Chat API).
+Документ опирается на утверждённое ТЗ (раздел 4.8 "Уведомления и события") и фиксирует
+контракт для событий, не относящихся к чат-сообщениям (чаты описаны отдельно в разделе Chat API).
 
 ---
 
 ## 1. Транспорт и общий формат события
 
-> Относится к модулю "Чат/Realtime" и общей событийной модели.
-
 ### 1.1. Транспорт
 
-- WebSocket endpoint: `/ws/chat` (в соответствии с разделами 10 "Chat API" и 11 "Уведомления" в `backend-api-spec-from-use-cases.md`; вариант с отдельным `/ws/events` на текущем этапе не используется, но может быть добавлен позже).
+- WebSocket endpoint: `/ws/chat`.
 - Аутентификация: JWT (как описано в основной спецификации).
 - После установления соединения клиент может получать два типа сообщений:
   - `CHAT_MESSAGE` — сообщения чатов (GLOBAL / SQUAD / COMPANY);
   - `EVENT` — системные события домена (отряды, роты, приказы, метки и т.п.).
 
-События отправляются в те же WebSocket-соединения, что и чаты, чтобы не плодить
-лишние подключения.
+События отправляются в те же WebSocket-соединения, что и чаты.
 
 ### 1.2. Общий формат сообщения-события
 
@@ -31,7 +28,7 @@
 ```json
 {
   "type": "EVENT",
-  "eventType": "SQUAD_MEMBER_JOINED",
+  "eventType": "JOINED_SQUAD",
   "channel": "SQUAD",
   "channelId": 10,
   "payload": { /* event-specific */ }
@@ -40,8 +37,8 @@
 
 Поля:
 
-- `type`: всегда `"EVENT"` для событий (чтобы отличать от `CHAT_MESSAGE`).
-- `eventType`: строковый код события (см. раздел 2–5).
+- `type`: всегда `"EVENT"`.
+- `eventType`: строковый код события (см. разделы 2–5).
 - `channel`: область доставки события:
   - `"USER"` — событие для одного конкретного пользователя;
   - `"SQUAD"` — для всех участников отряда;
@@ -52,141 +49,59 @@
   - для `SQUAD` — `squadId`;
   - для `COMPANY` — `companyId`;
   - для `GLOBAL` — `null`.
-- `payload`: объект с данными конкретного события (формат ниже).
-
-Клиент должен ориентироваться в первую очередь на `eventType` и `channel`, а поля
-`payload` интерпретировать в соответствии с таблицей событий ниже.
+- `payload`: объект с данными конкретного события.
 
 ---
 
-## 2. События по отрядам (Squad)
+## 2. События уровня пользователя / отряда (минимальный набор из ТЗ)
 
-> Этап реализации: после модуля "Отряды" (Squads).
+Минимальный набор (строго по ТЗ):
+- `SQUAD_CREATED`
+- `BECAME_COMMANDER`
+- `JOINED_SQUAD`
+- `LEFT_SQUAD`
+- `KICKED_FROM_SQUAD`
+- `SQUAD_DISBANDED`
 
-### 2.1. SQUAD_MEMBER_JOINED
+### 2.1. SQUAD_CREATED
 
-- **Когда генерируется:**
-  - после успешного выполнения `POST /api/v1/squads/{squadId}/join`;
-  - после создания отряда (`POST /api/v1/squads`) для добавления самого создателя.
+- **Когда генерируется:** после успешного `POST /api/v1/squads`.
 - **Канал:** `SQUAD`
-- **channelId:** `squadId` отряда.
+- **channelId:** `squadId` созданного отряда.
+- **Дублирование по USER:** не требуется.
 
-**Payload:**
-
-```json
-{
-  "squadId": 10,
-  "user": {
-    "id": 5,
-    "nickname": "Fox",
-    "status": "ALIVE",
-    "avatarIcon": "fox_02"
-  }
-}
-```
-
----
-
-### 2.2. SQUAD_MEMBER_LEFT
-
-- **Когда генерируется:**
-  - после успешного `POST /api/v1/squads/my/leave`, если пользователь — не командир;
-  - при выходе командира, если отряд не распускается, а передаёт командование дальше.
-- **Канал:** `SQUAD`
-- **channelId:** `squadId` отряда, который пользователь покинул.
-
-**Payload:**
-
-```json
-{
-  "squadId": 10,
-  "userId": 5
-}
-```
-
----
-
-### 2.3. SQUAD_MEMBER_KICKED
-
-- **Когда генерируется:**
-  - после успешного `POST /api/v1/squads/my/members/{userId}/kick` (командиром);
-  - после успешного `POST /api/v1/admin/squads/{squadId}/members/{userId}/kick` (ADMIN/MODERATOR).
-- **Канал:** `SQUAD`
-- **channelId:** `squadId`.
-
-Дополнительно отдельное событие для самого кикнутого пользователя
-может быть отправлено по каналу `USER` (см. ниже).
-
-**Payload:**
-
-```json
-{
-  "squadId": 10,
-  "userId": 5
-}
-```
-
----
-
-### 2.4. SQUAD_MEMBER_KICKED_SELF
-
-- **Когда генерируется:**
-  - параллельно с `SQUAD_MEMBER_KICKED` для самого кикнутого пользователя.
-- **Канал:** `USER`
-- **channelId:** `userId` кикнутого пользователя.
-
-**Payload:**
-
+**Payload (минимум):**
 ```json
 {
   "squadId": 10
 }
 ```
 
-Клиент может использовать это событие, чтобы:
-- сбросить локальное состояние «я состою в отряде»;
-- вернуть пользователя на экран выбора отряда.
-
 ---
 
-### 2.5. SQUAD_UPDATED
+### 2.2. BECAME_COMMANDER
 
 - **Когда генерируется:**
-  - после `PATCH /api/v1/squads/my`;
-  - после `PATCH /api/v1/admin/squads/{squadId}` (принудительные изменения).
-- **Канал:** `SQUAD`
-- **channelId:** `squadId`.
+  - после успешного `POST /api/v1/squads/my/transfer-commander`;
+  - при выходе текущего командира из отряда, если система автоматически назначает нового командира.
+- **Доставка:** в оба канала:
+  - `USER` — новому командиру;
+  - `SQUAD` — всем участникам отряда.
 
-**Payload:**
+**Вариант A (USER):**
+- channel = `USER`, channelId = `newCommanderUserId`
 
+Payload (минимум):
 ```json
 {
-  "squad": {
-    "id": 10,
-    "name": "Отряд Север",
-    "description": "Обновлённое описание",
-    "isOpen": false,
-    "color": "#00FF00",
-    "companyId": 3,
-    "commanderId": 1
-  }
+  "squadId": 10
 }
 ```
 
-Клиент может обновить локальный кеш данных отряда (название, описание, цвет и т.п.).
+**Вариант B (SQUAD):**
+- channel = `SQUAD`, channelId = `squadId`
 
----
-
-### 2.6. COMMANDER_CHANGED
-
-- **Когда генерируется:**
-  - после `POST /api/v1/squads/my/transfer-commander`;
-  - при выходе командира из отряда, если система автоматически назначает нового.
-- **Канал:** `SQUAD`
-- **channelId:** `squadId`.
-
-**Payload:**
-
+Payload:
 ```json
 {
   "squadId": 10,
@@ -195,117 +110,112 @@
 }
 ```
 
-Клиент может, например, обновить отображение значка командира в списке участников.
+---
+
+### 2.3. JOINED_SQUAD
+
+- **Когда генерируется:** после успешного `POST /api/v1/squads/{squadId}/join`.
+- **Канал:** `SQUAD`
+- **channelId:** `squadId`.
+
+**Payload (минимум):**
+```json
+{
+  "squadId": 10,
+  "userId": 5
+}
+```
 
 ---
 
-### 2.7. SQUAD_DISBANDED
+### 2.4. LEFT_SQUAD
+
+- **Когда генерируется:** после успешного `POST /api/v1/squads/my/leave`.
+- **Канал:** `SQUAD`
+- **channelId:** `squadId`, который пользователь покинул.
+
+**Payload (минимум):**
+```json
+{
+  "squadId": 10,
+  "userId": 5
+}
+```
+
+---
+
+### 2.5. KICKED_FROM_SQUAD
 
 - **Когда генерируется:**
-  - после успешного `POST /api/v1/squads/my/disband`;
-  - после `POST /api/v1/admin/squads/{squadId}/disband`.
-- **Канал:** `SQUAD`
-- **channelId:** `squadId` (подписки на этот канал после события теряют смысл).
+  - после успешного `POST /api/v1/squads/my/members/{userId}/kick`;
+  - после админ/модераторского кика (если реализованы admin endpoints).
+- **Доставка:** двойная:
+  - `SQUAD` — всем участникам отряда (обновить состав);
+  - `USER` — кикнутому пользователю (сбросить локальное состояние).
 
-Дополнительно может дублироваться по каналу `USER` для каждого участника.
+**Вариант A (SQUAD):**
+- channel = `SQUAD`, channelId = `squadId`
+```json
+{
+  "squadId": 10,
+  "userId": 5
+}
+```
 
-**Payload:**
-
+**Вариант B (USER):**
+- channel = `USER`, channelId = `userId`
 ```json
 {
   "squadId": 10
 }
 ```
 
-Клиент должен:
-- очистить локальное состояние отряда;
-- вернуть пользователя на экран выбора/создания отряда.
-
 ---
 
-## 3. События по ротам (Company)
-
-> Этап реализации: после модуля "Роты" (Companies).
-
-### 3.1. COMPANY_CREATED
+### 2.6. SQUAD_DISBANDED
 
 - **Когда генерируется:**
-  - после `POST /api/v1/companies` (командир создаёт роту для своего отряда).
+  - после `POST /api/v1/squads/my/disband`;
+  - при авто-удалении отряда, если он стал пустым.
 - **Канал:** `SQUAD`
-- **channelId:** `squadId` отряда создателя.
+- **channelId:** `squadId`.
 
-**Payload:**
-
+**Payload (минимум):**
 ```json
 {
-  "company": {
-    "id": 3,
-    "name": "Рота Волга",
-    "description": "Объединение отрядов",
-    "isOpen": true
-  }
+  "squadId": 10
 }
 ```
 
 ---
 
-### 3.2. COMPANY_UPDATED
+## 3. События уровня роты (Company) (минимальный набор из ТЗ)
+
+Минимальный набор (строго по ТЗ):
+- `SQUAD_JOINED_COMPANY`
+- `SQUAD_LEFT_COMPANY`
+- `COMPANY_DISBANDED`
+
+### 3.1. SQUAD_JOINED_COMPANY
 
 - **Когда генерируется:**
-  - после `PATCH /api/v1/companies/my`;
-  - после `PATCH /api/v1/admin/companies/{companyId}`.
-- **Канал:** `COMPANY`
-- **channelId:** `companyId`.
+  - после `POST /api/v1/companies` (создание роты включает отряд-инициатор в роту);
+  - после `POST /api/v1/companies/{companyId}/join`.
+- **Доставка:** в оба канала:
+  - `COMPANY` — всем участникам роты;
+  - `SQUAD` — отряду, который вошёл.
 
-**Payload:**
-
-```json
-{
-  "company": {
-    "id": 3,
-    "name": "Рота Север",
-    "description": "Обновлённое описание",
-    "isOpen": false
-  }
-}
-```
-
----
-
-### 3.3. COMPANY_SQUAD_JOINED
-
-- **Когда генерируется:**
-  - после успешного `POST /api/v1/companies/{companyId}/join` (вступление отряда).
-- **Канал:** `COMPANY`
-- **channelId:** `companyId`.
-
-**Payload:**
-
+**Вариант A (COMPANY):**
+- channel = `COMPANY`, channelId = `companyId`
 ```json
 {
   "companyId": 3,
-  "squad": {
-    "id": 10,
-    "name": "Отряд Волк",
-    "color": "#FF0000",
-    "commanderId": 1,
-    "membersCount": 5
-  }
+  "squadId": 10
 }
 ```
 
----
-
-### 3.4. COMPANY_SQUAD_LEFT
-
-- **Когда генерируется:**
-  - после `POST /api/v1/companies/my/leave` (выход отряда);
-  - после принудительного удаления отряда из роты через админ-операцию.
-- **Канал:** `COMPANY`
-- **channelId:** `companyId`.
-
-**Payload:**
-
+**Вариант B (SQUAD):**
+- channel = `SQUAD`, channelId = `squadId`
 ```json
 {
   "companyId": 3,
@@ -315,99 +225,91 @@
 
 ---
 
-### 3.5. COMPANY_DISBANDED
+### 3.2. SQUAD_LEFT_COMPANY
+
+- **Когда генерируется:** после `POST /api/v1/companies/my/leave`.
+- **Доставка:** в оба канала:
+  - `COMPANY` — всем участникам роты;
+  - `SQUAD` — отряду, который вышел.
+
+**Вариант A (COMPANY):**
+- channel = `COMPANY`, channelId = `companyId`
+```json
+{
+  "companyId": 3,
+  "squadId": 10
+}
+```
+
+**Вариант B (SQUAD):**
+- channel = `SQUAD`, channelId = `squadId`
+```json
+{
+  "companyId": 3,
+  "squadId": 10
+}
+```
+
+---
+
+### 3.3. COMPANY_DISBANDED
 
 - **Когда генерируется:**
-  - после `POST /api/v1/admin/companies/{companyId}/disband`;
-  - опционально — если последняя рота распущена пользователем (в сценариях, где это возможно).
+  - при авто-удалении роты, если она стала пустой;
+  - при принудительном роспуске (ADMIN/MODERATOR), если реализован соответствующий эндпоинт.
 - **Канал:** `COMPANY`
 - **channelId:** `companyId`.
 
-**Payload:**
-
+**Payload (минимум):**
 ```json
 {
   "companyId": 3
 }
 ```
 
-Участники отрядов, входивших в роту, должны перестать считать себя частью роты
-и удалить ротный чат/ротные метки из UI.
-
 ---
 
-## 4. События по приказам (Orders)
+## 4. События по тактическим меткам (Markers) (минимальный набор из ТЗ)
 
-> Этап реализации: после модуля "Приказы" (Orders).
+Минимальный набор (строго по ТЗ):
+- `MARKER_CREATED`
+- `MARKER_DELETED` (включая автоматическое истечение)
 
-### 4.1. ORDER_CREATED
+### 4.1. MARKER_CREATED
 
-- **Когда генерируется:**
-  - после успешного `POST /api/v1/orders` (командир создаёт приказ).
-- **Канал:** `SQUAD`
-- **channelId:** `squadId` отряда, к которому относится приказ.
-
-**Payload:**
-
-```json
-{
-  "order": {
-    "id": 100,
-    "squadId": 10,
-    "authorId": 1,
-    "description": "Занять высоту",
-    "status": "ACTIVE",
-    "createdAt": "2025-01-01T12:00:00Z",
-    "completedAt": null
-  }
-}
-```
-
----
-
-### 4.2. ORDER_STATUS_CHANGED
-
-- **Когда генерируется:**
-  - после `PATCH /api/v1/orders/{orderId}/status` (командиром или ADMIN/MODERATOR).
-- **Канал:** `SQUAD`
-- **channelId:** `squadId` приказа.
-
-**Payload:**
-
-```json
-{
-  "orderId": 100,
-  "squadId": 10,
-  "oldStatus": "ACTIVE",
-  "newStatus": "COMPLETED",
-  "completedAt": "2025-01-01T12:05:00Z"
-}
-```
-
----
-
-## 5. События по тактическим меткам (Markers)
-
-> Этап реализации: после модуля "Тактические метки" (Markers).
-
-### 5.1. MARKER_CREATED
-
-- **Когда генерируется:**
-  - после `POST /api/v1/markers` (любым участником или командиром, в зависимости от типа метки).
-- **Канал:**
-  - для чисто отрядных меток — `SQUAD` с `channelId = squadId`;
-  - для меток с `sendToCompany = true` — событие может дублироваться:
-    - в `SQUAD` (отряд-автор);
-    - и в `COMPANY` (все отряды роты), если метка действительно ротная.
+- **Когда генерируется:** после `POST /api/v1/markers`.
+- **Доставка:**
+  - если `sendToCompany = true` и метка реально стала ротной — событие отправляется в `COMPANY`;
+  - иначе — событие отправляется в `SQUAD`.
 
 `marker` в payload — это тот же `MarkerDto`, который возвращают REST эндпоинты `/api/v1/markers`.
 
-**Payload:**
-
+**Вариант A (SQUAD, sendToCompany != true):**
+- channel = `SQUAD`, channelId = `squadId`
 ```json
 {
   "marker": {
     "id": 500,
+    "markerTypeId": 1,
+    "markerTypeKey": "ENEMY_SPOTTED",
+    "squadId": 10,
+    "companyId": null,
+    "authorId": 5,
+    "lat": 59.123456,
+    "lng": 30.123456,
+    "description": "Контакт на холме",
+    "createdAt": "2025-01-01T12:00:00Z",
+    "expiresAt": "2025-01-01T12:10:00Z"
+  }
+}
+```
+
+**Вариант B (COMPANY, sendToCompany = true):**
+- channel = `COMPANY`, channelId = `companyId`
+```json
+{
+  "marker": {
+    "id": 501,
     "markerTypeId": 1,
     "markerTypeKey": "ENEMY_SPOTTED",
     "squadId": 10,
@@ -424,20 +326,17 @@
 
 ---
 
-### 5.2. MARKER_DELETED
+### 4.2. MARKER_DELETED
 
 - **Когда генерируется:**
-  - после `DELETE /api/v1/markers/{markerId}` (автором или ADMIN/MODERATOR);
-  - при автоматическом истечении `expiresAt` (для типов меток с lifetime);
-  - при применении политики уникальности (`uniquenessPolicy`), когда новая метка
-    того же типа вытесняет старую.
-
-- **Канал:**
+  - после `DELETE /api/v1/markers/{markerId}`;
+  - при автоматическом истечении `expiresAt`;
+  - при вытеснении по `uniquenessPolicy`.
+- **Канал:** определяется тем, куда была адресована метка:
   - `SQUAD` — для отрядных меток;
   - `COMPANY` — для ротных меток.
 
-**Payload:**
-
+**Payload (минимум):**
 ```json
 {
   "markerId": 500,
@@ -446,70 +345,62 @@
 }
 ```
 
-Клиент должен удалить метку с карты.
-
 ---
 
-## 6. События по пользователю (статус/аватар)
+## 5. События по приказам (Orders) (минимальный набор из ТЗ)
 
-> Этап реализации: после модулей "Security & Users" и "Профиль пользователя".
+Минимальный набор (строго по ТЗ):
+- `ORDER_CREATED`
+- `ORDER_STATUS_CHANGED`
 
-Эти события не строго обязательны, но могут использоваться для более «живого» UI,
-чтобы не опрашивать REST при каждом изменении.
+### 5.1. ORDER_CREATED
 
-### 6.1. USER_STATUS_CHANGED
+- **Когда генерируется:** после `POST /api/v1/orders`.
+- **Канал:** `SQUAD`
+- **channelId:** `squadId`.
 
-- **Когда генерируется:**
-  - после `PATCH /api/v1/users/me/status` (смена ALIVE/DEAD пользователем);
-  - опционально — после модераторской операции, если она будет добавлена.
-- **Канал:**
-  - `SQUAD` — для текущего отряда пользователя (если есть);
-  - опционально — `COMPANY`, если пользователь — командир и важен для ротного видимого состояния.
+`order` в payload — это тот же `OrderDto`, который возвращают REST эндпоинты `/api/v1/orders`.
 
 **Payload:**
-
 ```json
 {
-  "userId": 5,
-  "status": "DEAD"
+  "order": {
+    "id": 100,
+    "squadId": 10,
+    "authorId": 1,
+    "description": "Занять высоту",
+    "status": "ACTIVE",
+    "createdAt": "2025-01-01T12:00:00Z",
+    "completedAt": null
+  }
 }
 ```
 
 ---
 
-### 6.2. USER_AVATAR_CHANGED
+### 5.2. ORDER_STATUS_CHANGED
 
-- **Когда генерируется:**
-  - после `PATCH /api/v1/users/me/avatar`.
-- **Канал:**
-  - `SQUAD` — для текущего отряда пользователя;
-  - `COMPANY` — если пользователь — командир или, в целом, логика позволяет.
+- **Когда генерируется:** после `PATCH /api/v1/orders/{orderId}/status`.
+- **Канал:** `SQUAD`
+- **channelId:** `squadId` приказа.
 
-**Payload:**
-
+**Payload (минимум):**
 ```json
 {
-  "userId": 5,
-  "avatarIcon": "fox_02"
+  "orderId": 100,
+  "squadId": 10,
+  "oldStatus": "ACTIVE",
+  "newStatus": "COMPLETED",
+  "completedAt": "2025-01-01T12:05:00Z"
 }
 ```
 
 ---
 
-## 7. Замечания по развитию спецификации
+## 6. Замечания по развитию спецификации
 
-1. Набор `eventType`, описанный выше, покрывает основные сценарии из ТЗ и use-cases:
-   - изменение состава и параметров отрядов/рот;
-   - приказы;
-   - тактические метки;
-   - базовые изменения статуса/аватара.
-2. Для первых релизов (после реализации модулей Users/Squads/Companies/Orders/Markers и базового WebSocket-слоя) достаточно минимального подмножества событий, сгруппированного по модулям:
-   - модуль "Отряды" (Squads): `SQUAD_MEMBER_JOINED`, `SQUAD_MEMBER_LEFT`, `COMMANDER_CHANGED`, `SQUAD_DISBANDED`;
-   - модуль "Роты" (Companies): `COMPANY_SQUAD_JOINED`, `COMPANY_SQUAD_LEFT`, `COMPANY_DISBANDED`;
-   - модуль "Приказы" (Orders): `ORDER_CREATED`, `ORDER_STATUS_CHANGED`;
-   - модуль "Тактические метки" (Markers): `MARKER_CREATED`, `MARKER_DELETED`.
-3. При добавлении новых бизнес-функций рекомендуется:
-   - расширять этот документ новыми `eventType`, привязанными к соответствующим модулям/этапам;
-   - сохранять общий формат `EVENT` и принцип каналов `USER/SQUAD/COMPANY/GLOBAL`.
-На стороне реализации перечень событий может быть реализован как enum/константы,
-с централизованной точкой генерации событий из доменных сервисов.
+1. Набор `eventType`, описанный выше, **строго соответствует минимальному набору событий из ТЗ** (раздел 4.8).
+2. Любые новые `eventType` добавляются только через обновление ТЗ или отдельное согласование контракта.
+3. Общий формат `EVENT` и принцип каналов `USER/SQUAD/COMPANY/GLOBAL` сохраняются.
+4. Админские действия (ADMIN/MODERATOR) должны транслироваться теми же `eventType`, что и пользовательские,
+   если это не меняет семантику события.
