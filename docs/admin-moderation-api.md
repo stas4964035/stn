@@ -12,6 +12,11 @@
 ## User moderation
 - TODO: операции бана, кика, принудительной смены статуса ALIVE/DEAD.
 
+`PATCH /api/v1/admin/users/{userId}/account-status`
+- request: `{ "accountStatus": "BLOCKED" | "ACTIVE" | "DELETED" }`
+- response: `200` UserDto (или `204`)
+- ошибки: `400`/`401`/`403`/`404`
+
 ## Orders & markers moderation
 - TODO: принудительное удаление/изменение приказов и тактических меток.
 

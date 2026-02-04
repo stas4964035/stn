@@ -9,9 +9,88 @@
 - Аутентификация: JWT через заголовок `Authorization: Bearer <jwt-token>`
 - Все эндпоинты, кроме `/api/v1/auth/*`, требуют валидный JWT.
 - Временные поля: ISO 8601 (`YYYY-MM-DDThh:mm:ssZ`)
+## Correlation ID (Request ID) для REST
+
+Backend поддерживает корреляцию запросов через Request ID.
+
+### Заголовок
+
+- Входящий заголовок: `X-Request-Id` (опционально)
+- Исходящий заголовок: `X-Request-Id` (**обязателен** — всегда присутствует в ответе)
+
+### Правила обработки
+
+1) Если клиент прислал `X-Request-Id` и он валиден — сервер использует его.
+2) Если заголовка нет или он невалиден — сервер генерирует новый Request ID.
+3) Сервер всегда возвращает фактически используемый Request ID в ответе в `X-Request-Id`.
+
+### Валидация входящего `X-Request-Id`
+
+- максимальная длина: 128 символов;
+- допустимые символы: латиница/цифры и `- _ . :`
+- ориентир для проверки: `^[A-Za-z0-9._:-]{1,128}$`
+
+Если значение не проходит валидацию — оно игнорируется, и Request ID генерируется сервером.
+
+### Пример
+
+Запрос:
+```http
+GET /api/v1/users/me
+Authorization: Bearer <jwt>
+X-Request-Id: abc-123
+```
+Ответ:
+```
+200 OK
+X-Request-Id: abc-123
+```
+---
+## 0. JWT (нормативный контракт)
+
+### 0.1. Тип токена
+
+- Используется **только access token** (refresh token отсутствует).
+- Время жизни access token: **24 часа**.
+
+### 0.2. Передача токена (REST)
+
+- Клиент обязан передавать токен в заголовке:
+    - `Authorization: Bearer <jwt-token>`
+
+### 0.3. Передача токена (WebSocket `/ws/chat`)
+
+Допустимы оба варианта:
+- query-параметр `token` (например `/ws/chat?token=...`)
+- заголовок `Authorization: Bearer <jwt-token>` при upgrade
+
+### 0.4. Алгоритм и ключ
+
+- Алгоритм подписи: **HS256** (HMAC-SHA256).
+- Секрет хранится как **base64-строка** в конфигурации и при использовании декодируется в байты.
+- Минимальная длина ключа (после base64-decode): **32 байта (256 бит)**.
+
+### 0.5. JWT Claims (payload)
+
+Обязательные claims:
+
+- `sub` — идентификатор пользователя (userId). Рекомендуемый формат: строковое представление `User.id`.
+- `iat` — время выдачи токена (UTC).
+- `exp` — время истечения токена (UTC).
+- `role` — роль пользователя (`USER` | `MODERATOR` | `ADMIN`) из `systemRole`.
+
+Опционально:
+
+- `iss` — issuer.  
+  Если issuer **не задан** в конфигурации, claim `iss` **не добавляется** и при валидации **не проверяется**.
+
+### 0.6 Политика доступа при accountStatus
+- Если accountStatus != ACTIVE, то:
+  - все защищённые REST-эндпоинты возвращают 403 (а не 401) с детальным ErrorCode;
+  - WS-апгрейд/подключение запрещается (или соединение закрывается сразу после handshake) с кодом/сообщением.
+  - Для DELETED можно трактовать как “учётка недействительна”
 
 ---
-
 ## 1. DTO-модели
 
 ### 1.1. UserDto
@@ -23,6 +102,7 @@
   "nickname": "Viking",
   "systemRole": "USER",
   "status": "ALIVE",
+  "accountStatus": "ACTIVE",
   "avatarIcon": "wolf_01",
   "squadId": 10
 }
@@ -35,6 +115,7 @@
 - `nickname`: string — позывной.
 - `systemRole`: `"USER" | "MODERATOR" | "ADMIN"`.
 - `status`: `"ALIVE" | "DEAD"` — игровой статус.
+- `accountStatus`: `"ACTIVE"` | `"BLOCKED"` | `"DELETED"`, 
 - `avatarIcon`: string — ключ иконки аватара из допустимого набора.
 - `squadId`: number | null — текущий отряд пользователя (FK на `Squad`).
 
@@ -295,6 +376,7 @@
     "nickname": "Viking",
     "systemRole": "USER",
     "status": "ALIVE",
+    "accountStatus": "ACTIVE",
     "avatarIcon": "wolf_01",
     "squadId": null
   }
@@ -302,6 +384,28 @@
 ```
 
 Ошибки: `400`, `401`.
+
+`403` — если accountStatus = BLOCKED (и вернуть ErrorCode=ACCOUNT_BLOCKED)
+
+`403` — если accountStatus = DELETED (и вернуть ErrorCode=ACCOUNT_DELETED)
+
+**Семантика поля `token`:**
+
+- `token` — JWT access token, соответствующий разделу **0. JWT (нормативный контракт)**.
+- JWT содержит обязательные claims: `sub` (userId), `role` (systemRole), `iat`, `exp`.
+- TTL токена: 24 часа.
+- Алгоритм подписи: HS256.
+
+Пример payload (без подписи):
+
+```json
+{
+  "sub": "1",
+  "role": "USER",
+  "iat": 1730000000,
+  "exp": 1730086400
+}
+```
 
 ---
 
@@ -332,6 +436,10 @@
 **Response 200** — обновлённый `UserDto`.
 
 Ошибки: `400` (невалидный статус), `401`.
+
+`403` — ACCOUNT_BLOCKED
+
+`403` — ACCOUNT_DELETED
 
 ### 3.3. PATCH /api/v1/users/me/avatar
 
@@ -403,6 +511,10 @@
 
 Ошибки: `401`, `409` (пользователь уже состоит в отряде).
 
+`403` — ACCOUNT_BLOCKED
+
+`403` — ACCOUNT_DELETED
+
 ### 4.3. GET /api/v1/squads/my
 
 Текущий отряд пользователя (UC-2/UC-3/UC-4).
@@ -423,6 +535,8 @@
 - `403` — пользователь уже состоит в отряде.
 - `404` — отряд не найден.
 - `409` — отряд закрыт (`isOpen = false`).
+- `403` — ACCOUNT_BLOCKED
+- `403` — ACCOUNT_DELETED
 
 ### 4.5. POST /api/v1/squads/my/leave
 
@@ -451,6 +565,10 @@
 
 Ошибки: `401`, `403` (не командир), `404`.
 
+`403` — ACCOUNT_BLOCKED
+
+`403` — ACCOUNT_DELETED
+
 ### 4.7. PATCH /api/v1/squads/my
 
 Обновить параметры отряда командиром (UC-10).
@@ -469,6 +587,10 @@
 
 Ошибки: `401`, `403` (не командир и не MODERATOR/ADMIN), `404`.
 
+`403` — ACCOUNT_BLOCKED
+
+`403` — ACCOUNT_DELETED
+
 ### 4.8. POST /api/v1/squads/my/members/{userId}/kick
 
 Кикнуть участника из отряда (UC-10).
@@ -481,6 +603,10 @@
 - Цель должна состоять в текущем отряде инициатора.
 
 Ошибки: `401`, `403`, `404` (участник или отряд не найден), `409` (попытка кикнуть себя через этот эндпоинт).
+
+`403` — ACCOUNT_BLOCKED
+
+`403` — ACCOUNT_DELETED
 
 
 
@@ -545,6 +671,8 @@
 - `403` — инициатор не является командиром и не имеет прав ADMIN/MODERATOR.
 - `404` — отряд не найден, у пользователя нет отряда или `newCommanderUserId` не найден/не состоит в отряде.
 - `409` — попытка передать командование текущему командиру (нет изменения состояния).
+- `403` — ACCOUNT_BLOCKED
+- `403` — ACCOUNT_DELETED
 
 ---
 
@@ -631,6 +759,10 @@
 
 Ошибки: `401`, `403` (не командир), `404` (нет отряда или он не в роте).
 
+`403` — ACCOUNT_BLOCKED
+
+`403` — ACCOUNT_DELETED
+
 ---
 
 ## 6. Orders API (приказы)
@@ -649,6 +781,10 @@
 
 Ошибки: `401`, `404` (пользователь не состоит в отряде).
 
+`403` — ACCOUNT_BLOCKED
+
+`403` — ACCOUNT_DELETED
+
 ### 6.2. POST /api/v1/orders
 
 Создать приказ (UC-7, командир).
@@ -664,6 +800,10 @@
 **Response 201** — `OrderDto`.
 
 Ошибки: `401`, `403` (не командир отряда), `404` (нет отряда).
+
+`403` — ACCOUNT_BLOCKED
+
+`403` — ACCOUNT_DELETED
 
 ### 6.3. PATCH /api/v1/orders/{orderId}/status
 
@@ -681,6 +821,10 @@
 
 Ошибки: `401`, `403`, `404`, `409` (статус уже COMPLETED, если трактуем как конфликт).
 
+`403` — ACCOUNT_BLOCKED
+
+`403` — ACCOUNT_DELETED
+
 ---
 
 ## 7. Marker Types API
@@ -694,6 +838,10 @@
 **Response 200** — массив `MarkerTypeDto`.
 
 Ошибки: `401`.
+
+`403` — ACCOUNT_BLOCKED
+
+`403` — ACCOUNT_DELETED
 
 ---
 
@@ -719,6 +867,10 @@
 **Response 200** — массив `MarkerDto`.
 
 Ошибки: `401`.
+
+`403` — ACCOUNT_BLOCKED
+
+`403` — ACCOUNT_DELETED
 
 ### 8.2. POST /api/v1/markers
 
@@ -756,6 +908,10 @@
 
 Ошибки: `401`, `403` (не в отряде или нарушен `roleRestriction`), `404` (тип метки не найден/неактивен), `409` (возможные коллизии политики уникальности, если считаем их ошибкой).
 
+`403` — ACCOUNT_BLOCKED
+
+`403` — ACCOUNT_DELETED
+
 ### 8.3. DELETE /api/v1/markers/{markerId}
 
 Удалить метку (создатель или MODERATOR/ADMIN).
@@ -763,6 +919,10 @@
 **Response 204** — без тела.
 
 Ошибки: `401`, `403`, `404`.
+
+`403` — ACCOUNT_BLOCKED
+
+`403` — ACCOUNT_DELETED
 
 ---
 
@@ -839,6 +999,13 @@
 Пример: `/ws/chat?token=<jwt>`.
 
 ### 10.2. Подключение и подписка
+
+При подключении:
+  - если accountStatus = BLOCKED → соединение закрыть и (если поддерживается) отправить ERROR перед закрытием: code="ACCOUNT_BLOCKED"
+  - если accountStatus = DELETED → аналогично ACCOUNT_DELETED 
+
+При уже установленном соединении:
+  - если аккаунт стал BLOCKED/DELETED (админом) — сервер закрывает активные WS-соединения этого userId (и прекращает подписки)
 
 При установлении соединения:
 
