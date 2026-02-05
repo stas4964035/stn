@@ -55,7 +55,7 @@ Envelope:
     "timestamp": "2025-01-01T12:00:00Z",
     "status": 403,
     "code": "ACCOUNT_BLOCKED",
-    "message": "Account is blocked",
+    "message": "Аккаунт заблокирован",
     "path": "/ws/events",
     "details": { }
   }

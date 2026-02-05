@@ -38,3 +38,17 @@
 - Полный набор admin/moderation API beyond `PATCH /admin/users/{userId}/account-status`
 - Пагинация/сортировка/фильтры beyond того, что явно указано
 - Token blacklist / revocation store (Redis) — опционально позже
+
+## Дополнения (согласование комплекта документов)
+
+7) Унификация нейминга пользователя
+- Выбрано: `email` и `nickname` (вместо `login`/`displayName`) во всех публичных примерах REST.
+- JWT claims: `sub`, `email`, `role`.
+
+8) Схема БД как источник истины
+- Выбрано: миграции Flyway/Liquibase в репозитории как source of truth.
+- Ссылки на отдельный `db-schema.md` удалены из канонического комплекта (если файл отсутствует).
+
+9) План реализации
+- `backend-plan.md` очищен от ссылок на устаревшие документы и от “чата” в MVP.
+- План ссылается на `spec-api.md` / `spec-ws.md` для контрактов.

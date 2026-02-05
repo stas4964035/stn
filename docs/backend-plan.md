@@ -65,7 +65,7 @@
 4. **Geo** — загрузка геопозиции и выдача видимых позиций.
 5. **Tactical Markers** — справочник типов (чтение), создание/удаление меток, уникальность и lifetime.
 6. **Orders** — создание приказов и отметка выполнения.
-7. **Realtime & Chat** — WebSocket `/ws/chat`, чаты + доменные события по контракту `events-spec.md`.
+7. **Realtime & Chat** — WebSocket `/ws/events`, чаты + доменные события по контракту `events-spec.md`.
 8. **Admin / Moderation** — операции ADMIN/MODERATOR (минимум в соответствии с references в `events-spec.md`, расширение по `admin-moderation-api.md`).
 
 ---
@@ -226,8 +226,8 @@ com.k44.STN
 Эндпоинты:
 - `POST /api/v1/auth/register`
   - Request: `{ email, password, nickname }`
-  - Response 201: `UserDto` (без токена)
-  - Ошибки: 400, 409
+  - Response 200: `{ token, user }` (как в `spec-api.md`)
+
 - `POST /api/v1/auth/login`
   - Request: `{ email, password }`
   - Response 200: `{ token, user: UserDto }`
@@ -379,12 +379,12 @@ com.k44.STN
 Задачи:
 - `GeoLocation` (таблица `user_geo_locations`):
   - `user_id`
-  - `lat`, `lng`
+  - `lat`, `lon`
   - `recorded_at`/`timestamp` (UTC)
 
 ## 4.2. REST API (строго по контракту)
 - `POST /api/v1/geo/position` → 204
-  - Request: `{ lat, lng, mode: "AUTO"|"MANUAL" }`
+  - Request: `{ lat, lon, mode: "AUTO"|"MANUAL" }`
   - Семантика: **создаём новую запись** координат пользователя.
 - `GET /api/v1/geo/positions` → 200 `GeoPositionDto[]`
   - Видимость:
@@ -427,7 +427,7 @@ com.k44.STN
   - `squadId` (FK, not null)
   - `companyId` (nullable, если sendToCompany)
   - `authorId` (nullable по БД, но в домене обычно известен)
-  - `lat`, `lng`
+  - `lat`, `lon`
   - `description`
   - `createdAt`
   - `expiresAt` (nullable)
@@ -436,7 +436,7 @@ com.k44.STN
 - `GET /api/v1/marker-types` → `MarkerTypeDto[]`
 - `GET /api/v1/markers?includeExpired=false` → `MarkerDto[]`
 - `POST /api/v1/markers` → 201 `MarkerDto`
-  - Request: `{ markerTypeKey, lat, lng, description?, sendToCompany? }`
+  - Request: `{ markerTypeKey, lat, lon, description?, sendToCompany? }`
   - Семантика:
     - проверка `active` и `roleRestriction`
     - `sendToCompany` учитывается только если `canSendToCompany=true` и отряд в роте
@@ -496,7 +496,7 @@ com.k44.STN
 Реализовать UC-13 и доставку доменных событий по `events-spec.md` через один WebSocket endpoint. WS errors использовать схему ErrorResponse из errors-spec.md (timestamp обязателен, details опционален)
 
 ## 7.1. WebSocket endpoint и аутентификация (строго по контракту)
-- Endpoint: **`/ws/chat`**
+- Endpoint: **`/ws/events`**
 - Аутентификация: JWT
   - в query `token` (предпочтительно, как в спецификации) или заголовке upgrade
 
@@ -540,7 +540,7 @@ com.k44.STN
 - WS gateway подписывает соединение на нужные топики и транслирует в сокет.
 
 ## 7.6. Тесты
-- Подключение к `/ws/chat` с JWT
+- Подключение к `/ws/events` с JWT
 - Отправка `SEND_MESSAGE` и получение `CHAT_MESSAGE`
 - Доставка одного `EVENT` (например `ORDER_CREATED`) в нужный канал
 

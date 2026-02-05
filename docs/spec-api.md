@@ -21,9 +21,9 @@
 Request:
 ```json
 {
-  "login": "string",
+  "email": "string",
   "password": "string",
-  "displayName": "string"
+  "nickname": "string"
 }
 ```
 
@@ -33,8 +33,8 @@ Response `200`:
   "token": "jwt",
   "user": {
     "id": 1,
-    "login": "string",
-    "displayName": "string",
+    "email": "string",
+    "nickname": "string",
     "accountStatus": "ACTIVE",
     "role": "USER",
     "avatarUrl": null,
@@ -49,12 +49,12 @@ Response `200`:
 - `409 USER_ALREADY_EXISTS`
 - `400 VALIDATION_ERROR`
 
-### POST `/auth/login`
-Аутентификация по login/password.
+### POST `/auth/email`
+Аутентификация по email/password.
 
 Request:
 ```json
-{ "login": "string", "password": "string" }
+{ "email": "string", "password": "string" }
 ```
 
 Response `200` — тот же формат, что и у `/auth/register`.
@@ -81,7 +81,7 @@ Response `200`: `UserDto` (как поле `user` в ответах auth).
 Request:
 ```json
 {
-  "displayName": "string",
+  "nickname": "string",
   "avatarUrl": "string|null"
 }
 ```

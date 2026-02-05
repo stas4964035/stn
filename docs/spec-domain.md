@@ -27,7 +27,7 @@
 ## JWT
 
 - Алгоритм: HS256
-- Claims (MVP): `sub` = userId, `login`, `role`
+- Claims (MVP): `sub` = userId, `email`, `role`
 - TTL токена: 24h
 
 ### Инвалидация токенов при изменении accountStatus (канон, conservative)
