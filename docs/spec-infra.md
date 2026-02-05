@@ -1,49 +1,49 @@
-# spec-infra.md (NFR, observability, data model pointers)
+# spec-infra.md (NFR, observability, указатели на модель данных)
 
-This file consolidates operational requirements for MVP.
+Этот файл объединяет эксплуатационные требования для MVP.
 
-## Time & auditing
+## Время и аудит
 
-- All server times are UTC (`Instant`)
-- Entities must have `createdAt` and `updatedAt` where applicable
-- Use Spring Data JPA auditing (`@CreatedDate`, `@LastModifiedDate`) for auto-fill
+- Все времена на сервере — UTC (`Instant`)
+- У сущностей должны быть `createdAt` и `updatedAt`, где это применимо
+- Использовать Spring Data JPA auditing (`@CreatedDate`, `@LastModifiedDate`) для авто-заполнения
 
-## Request correlation
+## Корреляция запросов
 
-- Backend must accept `X-Request-Id` from clients
-- Backend must include the same `X-Request-Id` in:
+- Backend должен принимать `X-Request-Id` от клиентов
+- Backend должен включать тот же `X-Request-Id` в:
   - response headers
-  - log entries for the request
-- If header is absent, backend must generate it.
+  - log entries для запроса
+- Если заголовок отсутствует — backend должен сгенерировать его.
 
-## Logging
+## Логирование
 
-- Log at least:
+- Логировать минимум:
   - request id
-  - authenticated user id (if any)
+  - authenticated user id (если есть)
   - method + path
   - response status
   - duration
-- Sensitive data:
-  - never log passwords
-  - avoid logging raw JWT
+- Чувствительные данные:
+  - никогда не логировать пароли
+  - избегать логирования raw JWT
 
-## Database (canonical pointer)
+## База данных (канонический указатель)
 
-The authoritative MVP schema is based on `db-schema.md`. Key points:
-- PostgreSQL is the source of truth
-- geo positions stored as history (`user_geo_locations`) with index `(user_id, recorded_at desc)`
-- markers include `expires_at` and must be filtered by active/expired rules
-- squads, company_squads constraints enforce membership relations
+Авторитетная схема MVP основана на `db-schema.md`. Ключевые моменты:
+- PostgreSQL — source of truth
+- геопозиции хранятся историей (`user_geo_locations`) с индексом `(user_id, recorded_at desc)`
+- markers содержат `expires_at` и должны фильтроваться по правилам active/expired
+- squads, company_squads и ограничения поддерживают отношения членства/привязки
 
-## Background jobs (MVP)
+## Фоновые задачи (MVP)
 
-Markers expiration:
-- Background sweep every 1 minute (configurable) to detect expired markers and emit `MARKER_DELETED` events.
-- Sweep also handles cleanup/archival as implementation chooses.
+Истечение меток:
+- Фоновый sweep каждые 1 минуту (настраиваемо) для обнаружения истёкших меток и эмита `MARKER_DELETED`.
+- Sweep также может выполнять очистку/архивацию по выбору реализации.
 
 ## Deployment defaults (MVP)
 
 - Java 17/21 + Spring Boot 3.x
 - Postgres
-- Redis (optional in MVP; required later for scaling WS / caching / token revocation)
+- Redis (опционально в MVP; потребуется позже для масштабирования WS / кэша / token revocation)

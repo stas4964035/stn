@@ -1,22 +1,22 @@
-# spec-api.md (Canonical REST API)
+# spec-api.md (Канонический REST API)
 
-This is the **canonical** REST API contract for the Tactical App backend (MVP).
-If any older document conflicts with this file, **this file wins**.
+Это **канонический** контракт REST API для Tactical App backend (MVP).
+Если любой старый документ противоречит этому файлу — **истиной считается этот файл**.
 
-## Conventions
+## Конвенции
 
 - Base path: `/api/v1`
 - Content-Type: `application/json; charset=utf-8`
 - Auth: `Authorization: Bearer <jwt>`
-- Time: UTC, ISO-8601, `Instant` (e.g. `2025-01-01T12:00:00Z`)
-- IDs: `long`
-- Pagination: **not in MVP** unless explicitly specified.
-- Errors: see `spec-domain.md` / `errors` section (single format for REST and WS).
+- Время: UTC, ISO-8601, `Instant` (пример: `2025-01-01T12:00:00Z`)
+- ID: `long`
+- Пагинация: **не в MVP**, если явно не указано.
+- Ошибки: см. `spec-domain.md` (единый формат для REST и WS).
 
-## Authentication
+## Аутентификация
 
 ### POST `/auth/register`
-Registers a new user.
+Регистрирует нового пользователя.
 
 Request:
 ```json
@@ -45,38 +45,38 @@ Response `200`:
 }
 ```
 
-Errors:
+Ошибки:
 - `409 USER_ALREADY_EXISTS`
 - `400 VALIDATION_ERROR`
 
 ### POST `/auth/login`
-Authenticates by login/password.
+Аутентификация по login/password.
 
 Request:
 ```json
 { "login": "string", "password": "string" }
 ```
 
-Response `200` same shape as `/auth/register`.
+Response `200` — тот же формат, что и у `/auth/register`.
 
-Errors:
+Ошибки:
 - `401 INVALID_CREDENTIALS`
 - `403 ACCOUNT_BLOCKED | ACCOUNT_DELETED`
 - `400 VALIDATION_ERROR`
 
-## Users
+## Пользователи
 
 ### GET `/users/me`
-Returns current user profile.
+Возвращает профиль текущего пользователя.
 
-Response `200`: `UserDto` (same as in auth response `user`)
+Response `200`: `UserDto` (как поле `user` в ответах auth).
 
-Errors:
+Ошибки:
 - `401 UNAUTHORIZED`
 - `403 ACCOUNT_BLOCKED | ACCOUNT_DELETED`
 
 ### PATCH `/users/me`
-Updates profile (MVP fields).
+Обновляет профиль (поля MVP).
 
 Request:
 ```json
@@ -88,25 +88,25 @@ Request:
 
 Response `200`: `UserDto`
 
-Errors:
+Ошибки:
 - `400 VALIDATION_ERROR`
 - `401 UNAUTHORIZED`
 - `403 ACCOUNT_BLOCKED | ACCOUNT_DELETED`
 
 ### POST `/users/me/alive`
-Set `isAlive=true`.
+Установить `isAlive=true`.
 
 Response `200`: `UserDto`
 
 ### POST `/users/me/dead`
-Set `isAlive=false`.
+Установить `isAlive=false`.
 
 Response `200`: `UserDto`
 
-## Squads
+## Отряды (Squads)
 
 ### POST `/squads`
-Creates a squad. Creator becomes commander and member.
+Создаёт отряд. Создатель становится командиром и участником.
 
 Request:
 ```json
@@ -125,16 +125,16 @@ Response `200`:
 }
 ```
 
-Emits WS event: `SQUAD_CREATED` (channel `SQUAD`, channelId=`squadId`).
+WS событие: `SQUAD_CREATED` (канал `SQUAD`, channelId=`squadId`).
 
-Errors:
+Ошибки:
 - `400 VALIDATION_ERROR`
 - `403 ACCOUNT_BLOCKED | ACCOUNT_DELETED`
 
 ### GET `/squads/my`
-Returns squad where current user is member, or `404` if none.
+Возвращает отряд, в котором состоит текущий пользователь, или `404`, если отряда нет.
 
-Response `200`: `SquadDto` as above, plus members:
+Response `200`: `SquadDto` + список участников:
 ```json
 {
   "id": 10,
@@ -149,10 +149,11 @@ Response `200`: `SquadDto` as above, plus members:
 }
 ```
 
-Errors: `404 SQUAD_NOT_FOUND` if user is not in a squad.
+Ошибки:
+- `404 SQUAD_NOT_FOUND` (если пользователь не состоит в отряде)
 
 ### POST `/squads/my/join`
-Join existing squad by invite code.
+Вступить в существующий отряд по invite-коду.
 
 Request:
 ```json
@@ -161,28 +162,28 @@ Request:
 
 Response `200`: `SquadDto`
 
-Emits WS event: `JOINED_SQUAD` (channel `SQUAD`, channelId=`squadId`).
+WS событие: `JOINED_SQUAD` (канал `SQUAD`, channelId=`squadId`).
 
-Errors:
+Ошибки:
 - `404 SQUAD_NOT_FOUND`
 - `409 ALREADY_IN_SQUAD`
-- `403 FORBIDDEN` (e.g., squad full if such rule exists) or `400 VALIDATION_ERROR`
+- `403 FORBIDDEN` (например, если будет правило “отряд заполнен”) или `400 VALIDATION_ERROR`
 
 ### POST `/squads/my/leave`
-Leave current squad.
+Выйти из текущего отряда.
 
 Response `200`:
 ```json
 { "left": true }
 ```
 
-Emits WS event: `LEFT_SQUAD` (channel `SQUAD`, channelId=`squadId`).
+WS событие: `LEFT_SQUAD` (канал `SQUAD`, channelId=`squadId`).
 
-Notes:
-- If commander leaves and system auto-assigns a new commander, emits `BECAME_COMMANDER`.
+Примечания:
+- Если командир выходит и остаются участники, система назначает нового командира и эмитит `BECAME_COMMANDER`.
 
 ### POST `/squads/my/kick`
-Commander kicks a member.
+Командир исключает участника.
 
 Request:
 ```json
@@ -194,10 +195,10 @@ Response `200`:
 { "kicked": true }
 ```
 
-Emits WS event: `KICKED_FROM_SQUAD` (channel `SQUAD`, channelId=`squadId`).
+WS событие: `KICKED_FROM_SQUAD` (канал `SQUAD`, channelId=`squadId`).
 
 ### POST `/squads/my/transfer-commander`
-Transfer commander role to another member.
+Передать роль командира другому участнику.
 
 Request:
 ```json
@@ -209,22 +210,22 @@ Response `200`:
 { "commanderId": 123 }
 ```
 
-Emits WS event: `BECAME_COMMANDER` (channel `SQUAD`, channelId=`squadId`).
+WS событие: `BECAME_COMMANDER` (канал `SQUAD`, channelId=`squadId`).
 
 ### POST `/squads/my/disband`
-Disband current squad (commander only).
+Распустить текущий отряд (только командир).
 
 Response `200`:
 ```json
 { "disbanded": true }
 ```
 
-Emits WS event: `SQUAD_DISBANDED` (channel `SQUAD`, channelId=`squadId`).
+WS событие: `SQUAD_DISBANDED` (канал `SQUAD`, channelId=`squadId`).
 
-## Companies
+## Компании (Companies)
 
 ### POST `/companies`
-Create company. Creator becomes commander of the company.
+Создать компанию. Создатель становится командиром компании.
 
 Request:
 ```json
@@ -243,10 +244,10 @@ Response `200`:
 ```
 
 ### GET `/companies/my`
-Returns company where current user is commander (MVP),
-or `404` if none.
+Возвращает компанию, где текущий пользователь является командиром (MVP),
+или `404`, если компании нет.
 
-Response `200`: `CompanyDto` plus squads list:
+Response `200`: `CompanyDto` + список отрядов:
 ```json
 {
   "id": 50,
@@ -261,7 +262,7 @@ Response `200`: `CompanyDto` plus squads list:
 ```
 
 ### POST `/companies/my/add-squad`
-Attach a squad to the company (company commander only).
+Привязать отряд к компании (только командир компании).
 
 Request:
 ```json
@@ -273,10 +274,10 @@ Response `200`:
 { "added": true }
 ```
 
-Emits WS event: `SQUAD_JOINED_COMPANY` (channel `COMPANY`, channelId=`companyId`).
+WS событие: `SQUAD_JOINED_COMPANY` (канал `COMPANY`, channelId=`companyId`).
 
 ### POST `/companies/my/remove-squad`
-Detach squad from company.
+Отвязать отряд от компании.
 
 Request:
 ```json
@@ -288,24 +289,24 @@ Response `200`:
 { "removed": true }
 ```
 
-Emits WS event: `SQUAD_LEFT_COMPANY` (channel `COMPANY`, channelId=`companyId`).
+WS событие: `SQUAD_LEFT_COMPANY` (канал `COMPANY`, channelId=`companyId`).
 
 ### POST `/companies/my/disband`
-Disband company (commander only).
+Распустить компанию (только командир).
 
 Response `200`:
 ```json
 { "disbanded": true }
 ```
 
-Emits WS event: `COMPANY_DISBANDED` (channel `COMPANY`, channelId=`companyId`).
+WS событие: `COMPANY_DISBANDED` (канал `COMPANY`, channelId=`companyId`).
 
-## Markers
+## Метки (Markers)
 
-Marker visibility is defined by `visibility` and scope fields.
+Видимость метки определяется `visibility` и scope-полями.
 
 ### POST `/markers`
-Create marker.
+Создать метку.
 
 Request:
 ```json
@@ -321,10 +322,10 @@ Request:
 }
 ```
 
-Rules:
-- For `SQUAD` visibility, `squadId` must be set.
-- For `COMPANY` visibility, `companyId` must be set.
-- For `GLOBAL`, both `squadId` and `companyId` must be null.
+Правила:
+- Для `SQUAD` должно быть задано `squadId`.
+- Для `COMPANY` должно быть задано `companyId`.
+- Для `GLOBAL` оба поля `squadId` и `companyId` должны быть `null`.
 
 Response `200`:
 ```json
@@ -343,10 +344,10 @@ Response `200`:
 }
 ```
 
-Emits WS event: `MARKER_CREATED` (channel depends on visibility; see `spec-ws.md`).
+WS событие: `MARKER_CREATED` (канал зависит от visibility; см. `spec-ws.md`).
 
 ### GET `/markers`
-List markers visible to current user.
+Список меток, видимых текущему пользователю.
 
 Query params:
 - `includeExpired` = `true|false` (default `false`)
@@ -357,19 +358,19 @@ Response `200`:
 ```
 
 ### DELETE `/markers/{markerId}`
-Delete marker.
+Удалить метку.
 
 Response `200`:
 ```json
 { "deleted": true }
 ```
 
-Emits WS event: `MARKER_DELETED` (channel depends on visibility/scope).
+WS событие: `MARKER_DELETED` (канал зависит от visibility/scope).
 
-## Orders
+## Приказы (Orders)
 
 ### POST `/orders`
-Create order inside squad.
+Создать приказ в рамках отряда.
 
 Request:
 ```json
@@ -395,10 +396,10 @@ Response `200`:
 }
 ```
 
-Emits WS event: `ORDER_CREATED` (channel `SQUAD`, channelId=`squadId`).
+WS событие: `ORDER_CREATED` (канал `SQUAD`, channelId=`squadId`).
 
 ### GET `/orders`
-List orders.
+Список приказов.
 
 Query params:
 - `squadId` (required)
@@ -411,7 +412,7 @@ Response `200`:
 ```
 
 ### PATCH `/orders/{orderId}/status`
-Update order status.
+Изменить статус приказа.
 
 Request:
 ```json
@@ -420,12 +421,12 @@ Request:
 
 Response `200`: `OrderDto`
 
-Emits WS event: `ORDER_STATUS_CHANGED` (channel `SQUAD`, channelId=`squadId`).
+WS событие: `ORDER_STATUS_CHANGED` (канал `SQUAD`, channelId=`squadId`).
 
-## Geo
+## Геопозиции (Geo)
 
 ### POST `/geo/position`
-Store current user position (append-only history).
+Сохранить позицию текущего пользователя (append-only история).
 
 Request:
 ```json
@@ -438,7 +439,7 @@ Response `200`:
 ```
 
 ### GET `/geo/positions`
-Returns **latest** known position for each visible user.
+Возвращает **последнюю** известную позицию для каждого видимого пользователя.
 
 Response `200`:
 ```json
@@ -449,14 +450,14 @@ Response `200`:
 }
 ```
 
-Visibility (MVP):
-- Users in same squad are visible to each other.
-- Company commander can see squad members of squads attached to the company (if implemented in MVP).
+Видимость (MVP):
+- Пользователи в одном отряде видимы друг другу.
+- Командир компании может видеть участников отрядов, привязанных к компании (если реализовано в MVP).
 
 ## Admin (MVP)
 
 ### PATCH `/admin/users/{userId}/account-status`
-Change user `accountStatus` (ADMIN/MODERATOR only).
+Изменить `accountStatus` пользователя (только ADMIN/MODERATOR).
 
 Request:
 ```json
@@ -468,6 +469,6 @@ Response `200`:
 { "userId": 123, "accountStatus": "BLOCKED" }
 ```
 
-Effects:
-- Any protected REST request by that user must return `403 ACCOUNT_BLOCKED|ACCOUNT_DELETED`.
-- WS connections for that user must be rejected/closed.
+Эффекты:
+- Любой защищённый REST-запрос этого пользователя должен возвращать `403 ACCOUNT_BLOCKED|ACCOUNT_DELETED`.
+- WS соединения этого пользователя должны быть отклонены/закрыты.

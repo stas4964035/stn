@@ -1,20 +1,20 @@
-# spec-ws.md (Canonical WebSocket)
+# spec-ws.md (Канонический WebSocket)
 
-This is the **canonical** WebSocket contract for realtime events (MVP).
-If any older document conflicts with this file, **this file wins**.
+Это **канонический** контракт WebSocket для realtime-событий (MVP).
+Если любой старый документ противоречит этому файлу — **истиной считается этот файл**.
 
-## Endpoint and auth
+## Endpoint и auth
 
 - Endpoint: `GET /ws/events`
 - Auth:
-  - preferred: `Authorization: Bearer <jwt>` on WebSocket upgrade
-  - fallback: query param `token=<jwt>` (for limited clients)
+  - предпочтительно: `Authorization: Bearer <jwt>` при WebSocket upgrade
+  - fallback: query param `token=<jwt>` (для ограниченных клиентов)
 
-If user account is not ACTIVE:
-- the server must reject the connection (close during handshake or immediately after connect)
-- error code: `ACCOUNT_BLOCKED` or `ACCOUNT_DELETED`
+Если `accountStatus != ACTIVE`:
+- сервер должен отклонить соединение (на handshake или сразу после connect)
+- код ошибки: `ACCOUNT_BLOCKED` или `ACCOUNT_DELETED`
 
-## Message types
+## Типы сообщений
 
 ### EVENT (server → client)
 Envelope:
@@ -29,10 +29,10 @@ Envelope:
 ```
 
 - `channel`: `"USER" | "SQUAD" | "COMPANY" | "GLOBAL"`
-- `channelId`: numeric id for `USER/SQUAD/COMPANY`, omitted or null for `GLOBAL`
+- `channelId`: числовой id для `USER/SQUAD/COMPANY`, опущен или `null` для `GLOBAL`
 
 ### SUBSCRIBE (client → server)
-Client subscribes to a channel.
+Подписка клиента на канал.
 ```json
 { "type": "SUBSCRIBE", "channel": "SQUAD", "channelId": 10 }
 ```
@@ -47,7 +47,7 @@ Client subscribes to a channel.
 { "type": "ACK", "message": "subscribed", "channel": "SQUAD", "channelId": 10 }
 ```
 
-### ERROR (server → client) — **single canonical format**
+### ERROR (server → client) — **единый канонический формат**
 ```json
 {
   "type": "ERROR",
@@ -62,11 +62,11 @@ Client subscribes to a channel.
 }
 ```
 
-No alternative error formats are allowed.
+Альтернативные форматы ошибок не допускаются.
 
-## Canonical event types (MVP)
+## Канонические eventType (MVP)
 
-### Squad events (channel: SQUAD)
+### События отряда (канал: SQUAD)
 
 1) `SQUAD_CREATED`
 Payload:
@@ -104,7 +104,7 @@ Payload:
 { "squadId": 10 }
 ```
 
-### Company events (channel: COMPANY)
+### События компании (канал: COMPANY)
 
 1) `SQUAD_JOINED_COMPANY`
 Payload:
@@ -124,7 +124,7 @@ Payload:
 { "companyId": 50 }
 ```
 
-### Marker events (channel depends on visibility)
+### События меток (канал зависит от visibility)
 
 1) `MARKER_CREATED`
 Payload:
@@ -138,16 +138,16 @@ Payload:
 { "markerId": 900 }
 ```
 
-Channel rules:
-- marker visibility `SQUAD` → channel `SQUAD`, channelId=`squadId`
+Правила выбора канала:
+- visibility `SQUAD` → channel `SQUAD`, channelId=`squadId`
 - `COMPANY` → channel `COMPANY`, channelId=`companyId`
 - `GLOBAL` → channel `GLOBAL`
 
-Expiration:
-- If `expiresAt` is used, server must emit `MARKER_DELETED` when marker becomes inactive (background sweep).
-- The payload stays the same (`markerId` only) to preserve the minimal contract.
+Истечение:
+- Если используется `expiresAt`, сервер должен эмитить `MARKER_DELETED`, когда метка становится неактивной (фоновый sweep).
+- Payload остаётся минимальным (`markerId`), чтобы сохранить стабильность контракта.
 
-### Order events (channel: SQUAD)
+### События приказов (канал: SQUAD)
 
 1) `ORDER_CREATED`
 Payload:
@@ -166,21 +166,21 @@ Payload:
 }
 ```
 
-## Compatibility mapping (legacy names → canonical)
+## Маппинг совместимости (legacy names → canonical)
 
-If any client or scenario text uses the names below, they MUST be treated as aliases to canonical names:
+Если клиент или текст сценариев использует имена ниже, они **должны трактоваться как алиасы** к каноническим именам:
 
 - `SQUAD_MEMBER_JOINED` → `JOINED_SQUAD`
 - `SQUAD_MEMBER_LEFT` → `LEFT_SQUAD`
 - `COMMANDER_CHANGED` → `BECAME_COMMANDER`
 
-No other aliases are supported in MVP.
+Другие алиасы в MVP не поддерживаются.
 
-## Subscriptions (recommended MVP behavior)
+## Подписки (рекомендуемое поведение MVP)
 
-- On connect, server SHOULD auto-subscribe the user to:
-  - `USER/<userId>` (optional, reserved for future)
-  - the user's current `SQUAD/<squadId>` if they are in a squad
-  - the user's company channel if they are company commander AND company exists
+- При connect сервер SHOULD auto-subscribe пользователя на:
+  - `USER/<userId>` (optional, резерв на будущее)
+  - текущий `SQUAD/<squadId>`, если пользователь в отряде
+  - канал компании, если пользователь — командир компании И компания существует
 
-Client-driven subscribe/unsubscribe remains supported.
+При этом client-driven subscribe/unsubscribe остаётся поддержан.

@@ -1,17 +1,17 @@
-# spec-domain.md (Domain rules, errors, security)
+# spec-domain.md (Доменные правила, ошибки, security)
 
-This file consolidates:
-- domain invariants and access control (ACL)
-- error model (single canonical ErrorResponse)
-- security rules (JWT validation, account status, WS policy)
+Этот файл объединяет:
+- доменные инварианты и доступы (ACL)
+- модель ошибок (единый канонический ErrorResponse)
+- security правила (JWT validation, account status, политика WS)
 
-If any older document conflicts with this file, **this file wins**.
+Если любой старый документ противоречит этому файлу — **истиной считается этот файл**.
 
-## Roles and account status
+## Роли и статус аккаунта
 
-### Roles
+### Роли
 - `USER`
-- `MODERATOR` (admin-like permissions for moderation APIs)
+- `MODERATOR` (права модерации/админ-панели)
 - `ADMIN`
 
 ### accountStatus
@@ -19,66 +19,66 @@ If any older document conflicts with this file, **this file wins**.
 - `BLOCKED`
 - `DELETED`
 
-Rules:
-- If `accountStatus != ACTIVE`:
-  - any protected REST endpoint must respond with `403` and code `ACCOUNT_BLOCKED` or `ACCOUNT_DELETED`
-  - any WS connection must be rejected/closed with `ERROR` (same ErrorResponse shape)
+Правила:
+- Если `accountStatus != ACTIVE`:
+  - любой защищённый REST endpoint должен отвечать `403` и code `ACCOUNT_BLOCKED` или `ACCOUNT_DELETED`
+  - любое WS соединение должно быть отклонено/закрыто с `ERROR` (в формате ErrorResponse)
 
 ## JWT
 
-- Algorithm: HS256
+- Алгоритм: HS256
 - Claims (MVP): `sub` = userId, `login`, `role`
-- Token TTL: 24h
+- TTL токена: 24h
 
-### Token invalidation rule (canonical, conservative)
-Requirement: “tokens are invalid from the moment account is BLOCKED/DELETED”.
+### Инвалидация токенов при изменении accountStatus (канон, conservative)
+Требование: “токены недействительны с момента BLOCKED/DELETED”.
 
-MVP implementation rule:
-- Every protected REST request MUST load user by `sub` and check `accountStatus`.
-- Every WS connection MUST load user by `sub` and check `accountStatus` at connect time.
-- For long-lived WS connections, server MUST close the session if `accountStatus` changes away from ACTIVE.
+Правило реализации MVP:
+- Каждый защищённый REST запрос MUST загружать пользователя по `sub` и проверять `accountStatus`.
+- Каждое WS соединение MUST загружать пользователя по `sub` и проверять `accountStatus` при подключении.
+- Для long-lived WS соединений сервер MUST закрывать сессию, если `accountStatus` меняется на не-ACTIVE.
 
-This makes previously issued tokens effectively unusable once the status changes, without requiring a token blacklist in MVP.
+Это делает ранее выданные токены фактически непригодными после смены статуса без введения blacklist в MVP.
 
-## Core domain invariants (MVP)
+## Инварианты домена (MVP)
 
-### Squad
-- A user can be member of at most one squad at a time.
-- Squad has exactly one commander (who is also a member).
-- Commander can:
-  - kick members
-  - transfer commander role
-  - disband squad
-- Leaving rules:
-  - if commander leaves and members remain, system must assign a new commander and emit `BECAME_COMMANDER`.
-  - if last member leaves, squad is disbanded (or auto-deleted per implementation).
+### Отряд (Squad)
+- Пользователь может состоять максимум в одном отряде.
+- У отряда ровно один командир (который также участник).
+- Командир может:
+  - исключать участников
+  - передавать роль командира
+  - распускать отряд
+- Правила выхода:
+  - если командир выходит и участники остаются, система назначает нового командира и эмитит `BECAME_COMMANDER`
+  - если выходит последний участник, отряд распускается (или удаляется — по реализации)
 
-### Company
-- Company has exactly one commander.
-- A squad can belong to at most one company at a time.
-- Company commander can attach/detach squads and disband company.
+### Компания (Company)
+- У компании ровно один командир.
+- Отряд может принадлежать максимум одной компании.
+- Командир компании может привязывать/отвязывать отряды и распускать компанию.
 
-### Markers
-- Marker visibility:
+### Метки (Markers)
+- Видимость метки:
   - `SQUAD` (scope = squadId)
   - `COMPANY` (scope = companyId)
-  - `GLOBAL` (no scope)
-- Marker active if `expiresAt == null` OR `expiresAt > now(UTC)`.
-- Listing default: `includeExpired=false` (return active only).
+  - `GLOBAL` (без scope)
+- Метка активна если `expiresAt == null` ИЛИ `expiresAt > now(UTC)`.
+- Listing по умолчанию: `includeExpired=false` (возвращать только активные).
 
-### Orders
-- Order belongs to a squad.
-- Status: `CREATED | IN_PROGRESS | COMPLETED`
-- When status becomes `COMPLETED`, `completedAt` is set.
+### Приказы (Orders)
+- Приказ принадлежит отряду.
+- Статус: `CREATED | IN_PROGRESS | COMPLETED`
+- При переходе в `COMPLETED` устанавливается `completedAt`.
 
-### Geo
-- `POST /geo/position` is append-only history.
-- `GET /geo/positions` returns **latest** per visible user.
+### Геопозиции (Geo)
+- `POST /geo/position` — append-only история.
+- `GET /geo/positions` — возвращает **последнюю** позицию по видимым пользователям.
 
-## Errors (single canonical model)
+## Ошибки (единая каноническая модель)
 
 ### ErrorResponse
-Used in REST responses and WS `ERROR`.
+Используется в REST и WS `ERROR`.
 
 ```json
 {
@@ -91,7 +91,7 @@ Used in REST responses and WS `ERROR`.
 }
 ```
 
-### Canonical error codes (MVP)
+### Канонические error codes (MVP)
 
 Auth / user:
 - `UNAUTHORIZED` (401)
@@ -116,5 +116,5 @@ Generic:
 - `CONFLICT` (409)
 - `INTERNAL_ERROR` (500)
 
-Notes:
-- `details` is reserved for field errors (validation) and contextual metadata.
+Примечания:
+- `details` зарезервирован под field errors (validation) и контекстные метаданные.
