@@ -307,6 +307,8 @@ Response `200`:
 ```json
 { "removed": true }
 ```
+Правило: если после отвязки в компании не осталось отрядов, компания удаляется.
+
 
 WS событие: `SQUAD_LEFT_COMPANY` (канал `COMPANY`, channelId=`companyId`).
 
@@ -425,7 +427,7 @@ Response `200`:
 { "deleted": true }
 ```
 
-WS событие: `MARKER_DELETED` (канал зависит от visibility/scope).
+WS событие: `MARKER_DELETED` (эмитится в `SQUAD/<squadId>` и, если `sendToCompany=true`, дополнительно в `COMPANY/<companyId>`).
 
 ## Приказы (Orders)
 
