@@ -103,6 +103,12 @@ Payload:
 ```json
 { "squadId": 10 }
 ```
+Триггеры (MVP):
+- POST `/api/v1/squads/my/disband`
+- POST `/api/v1/squads/my/leave`, если выходит последний участник
+  
+Примечание:
+- При `SQUAD_DISBANDED` все `Orders` данного отряда считаются удалёнными (отдельных WS событий удаления приказов в MVP нет).
 
 ### События компании (канал: COMPANY)
 
@@ -123,6 +129,9 @@ Payload:
 ```json
 { "companyId": 50 }
 ```
+Триггеры (MVP):
+- `POST /api/v1/companies/my/disband`
+- `POST /api/v1/companies/my/remove-squad`, если после отвязки не осталось отрядов и компания удаляется
 
 ### События меток (канал зависит от значения companyID)
 

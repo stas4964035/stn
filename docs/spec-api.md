@@ -189,7 +189,14 @@ WS событие: `LEFT_SQUAD` (канал `SQUAD`, channelId=`squadId`).
 
 Примечания:
 - Если командир выходит и остаются участники, система назначает нового командира и эмитит `BECAME_COMMANDER`.
-
+- Если выходит последний участник, отряд удаляется.
+  - В этом случае сервер должен:
+  - - эмитить `LEFT_SQUAD` (как обычно);
+  - - затем эмитить `SQUAD_DISBANDED` (канал `SQUAD`, channelId=`squadId`);
+  - - удалить все приказы (`Orders`) данного отряда (каскад).
+  - Если отряд состоял в компании — применяются те же WS эффекты, что и при отвязке/удалении:
+  - - `SQUAD_LEFT_COMPANY` (канал `COMPANY`, channelId=`companyId`);
+  - - и, если после этого в компании не осталось отрядов, `COMPANY_DISBANDED`.
 ### POST `/squads/my/kick`
 Командир исключает участника.
 
@@ -229,6 +236,10 @@ Response `200`:
 ```
 
 WS событие: `SQUAD_DISBANDED` (канал `SQUAD`, channelId=`squadId`).
+
+Примечания:
+- При распуске отряда сервер должен удалить все приказы (`Orders`) данного отряда (каскад).
+- Если отряд состоял в компании, сервер должен эмитить `SQUAD_LEFT_COMPANY` (канал `COMPANY`, `channelId=companyId`) и, если компания стала пустой, `COMPANY_DISBANDED`.
 
 ## Компании (Companies)
 
@@ -293,7 +304,7 @@ Response `200`:
 { "added": true }
 ```
 
-WS событие: `SQUAD_JOINED_COMPANY` (канал `COMPANY`, channelId=`companyId`).
+WS события: `SQUAD_JOINED_COMPANY` (канал `COMPANY`, channelId=`companyId`).
 
 ### POST `/companies/my/remove-squad`
 Отвязать отряд от компании(командир отряда, входящего в компанию и являющийся командиром этого отряда).
@@ -310,7 +321,9 @@ Response `200`:
 Правило: если после отвязки в компании не осталось отрядов, компания удаляется.
 
 
-WS событие: `SQUAD_LEFT_COMPANY` (канал `COMPANY`, channelId=`companyId`).
+WS события:
+- `SQUAD_JOINED_COMPANY` (канал `COMPANY`, channelId=`companyId`).
+- Если после отвязки в компании не осталось отрядов и компания удаляется — дополнительно эмитить `COMPANY_DISBANDED` (канал `COMPANY`, `channelId=companyId`)
 
 ### POST `/companies/my/disband`
 Распустить компанию (только командир отряда, в случае если этот отряд единственный в компании).
@@ -320,8 +333,9 @@ Response `200`:
 { "disbanded": true }
 ```
 
-WS событие: `COMPANY_DISBANDED` (канал `COMPANY`, channelId=`companyId`).
-
+WS события:
+- `SQUAD_LEFT_COMPANY` (канал `COMPANY`, `channelId=companyId`).
+- Если после отвязки в компании не осталось отрядов и компания удаляется — дополнительно эмитить `COMPANY_DISBANDED` (канал `COMPANY`, `channelId=companyId`).
 ## Типы тактических меток (TacticalMarkerType)
 
 Тип метки определяет правила создания и поведения меток.
