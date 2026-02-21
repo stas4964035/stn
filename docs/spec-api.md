@@ -420,14 +420,23 @@ Response `200`:
 ```
 
 ### DELETE `/markers/{markerId}`
-Удалить метку.
+Удалить метку (**деактивировать**, append-only).
+
+Семантика (канон):
+- Запись метки физически **не удаляется**.
+- Удаление = сервер устанавливает `expiresAt = nowUtc` (UTC `Instant`).
+- Повторный вызов для уже неактивной метки должен быть идемпотентным
+(поведение по статусу/ответу — на усмотрение реализации MVP, но без физического удаления).
 
 Response `200`:
 ```json
 { "deleted": true }
 ```
+WS событие: `MARKER_DELETED` (обязательное).
+- Эмитится в `SQUAD/<squadId>` и, если `sendToCompany=true`, дополнительно в `COMPANY/<companyId>`
+- Эмиссия должна происходить как при деактивации через этот endpoint, так и при истечении `expiresAt` (sweep).
 
-WS событие: `MARKER_DELETED` (эмитится в `SQUAD/<squadId>` и, если `sendToCompany=true`, дополнительно в `COMPANY/<companyId>`).
+
 
 ## Приказы (Orders)
 
