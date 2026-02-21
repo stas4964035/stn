@@ -191,12 +191,12 @@ WS событие: `LEFT_SQUAD` (канал `SQUAD`, channelId=`squadId`).
 - Если командир выходит и остаются участники, система назначает нового командира и эмитит `BECAME_COMMANDER`.
 - Если выходит последний участник, отряд удаляется.
   - В этом случае сервер должен:
-  - - эмитить `LEFT_SQUAD` (как обычно);
-  - - затем эмитить `SQUAD_DISBANDED` (канал `SQUAD`, channelId=`squadId`);
-  - - удалить все приказы (`Orders`) данного отряда (каскад).
+    - эмитить `LEFT_SQUAD` (как обычно);
+    - затем эмитить `SQUAD_DISBANDED` (канал `SQUAD`, channelId=`squadId`);
+    - удалить все приказы (`Orders`) данного отряда (каскад).
   - Если отряд состоял в компании — применяются те же WS эффекты, что и при отвязке/удалении:
-  - - `SQUAD_LEFT_COMPANY` (канал `COMPANY`, channelId=`companyId`);
-  - - и, если после этого в компании не осталось отрядов, `COMPANY_DISBANDED`.
+    - `SQUAD_LEFT_COMPANY` (канал `COMPANY`, channelId=`companyId`);
+    - и, если после этого в компании не осталось отрядов, `COMPANY_DISBANDED`.
 ### POST `/squads/my/kick`
 Командир исключает участника.
 
@@ -322,7 +322,7 @@ Response `200`:
 
 
 WS события:
-- `SQUAD_JOINED_COMPANY` (канал `COMPANY`, channelId=`companyId`).
+- `SQUAD_LEFT_COMPANY` (канал `COMPANY`, channelId=`companyId`).
 - Если после отвязки в компании не осталось отрядов и компания удаляется — дополнительно эмитить `COMPANY_DISBANDED` (канал `COMPANY`, `channelId=companyId`)
 
 ### POST `/companies/my/disband`

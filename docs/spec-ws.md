@@ -132,6 +132,8 @@ Payload:
 Триггеры (MVP):
 - `POST /api/v1/companies/my/disband`
 - `POST /api/v1/companies/my/remove-squad`, если после отвязки не осталось отрядов и компания удаляется
+  
+Порядок при автоудалении компании: сначала `SQUAD_LEFT_COMPANY`, затем `COMPANY_DISBANDED`.
 
 ### События меток (канал зависит от значения companyID)
 
