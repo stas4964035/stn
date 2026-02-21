@@ -124,7 +124,7 @@ Payload:
 { "companyId": 50 }
 ```
 
-### События меток (канал зависит от visibility)
+### События меток (канал зависит от значения companyID)
 
 1) `MARKER_CREATED`
 Payload:
@@ -139,9 +139,11 @@ Payload:
 ```
 
 Правила выбора канала:
-- visibility `SQUAD` → channel `SQUAD`, channelId=`squadId`
-- `COMPANY` → channel `COMPANY`, channelId=`companyId`
-- `GLOBAL` → channel `GLOBAL`
+
+- Метка всегда эмитится в канал SQUAD (channelId = squadId).
+- Если метка отправлена в компанию (sendToCompany = true),
+  дополнительно эмитится событие в канал COMPANY
+  (channelId = companyId).
 
 Истечение:
 - Если используется `expiresAt`, сервер должен эмитить `MARKER_DELETED`, когда метка становится неактивной (фоновый sweep).
@@ -181,6 +183,6 @@ Payload:
 - При connect сервер SHOULD auto-subscribe пользователя на:
   - `USER/<userId>` (optional, резерв на будущее)
   - текущий `SQUAD/<squadId>`, если пользователь в отряде
-  - канал компании, если пользователь — командир компании И компания существует
+  - канал компании, если отряд пользователя входит в компанию
 
 При этом client-driven subscribe/unsubscribe остаётся поддержан.

@@ -120,6 +120,7 @@ Response `200`:
   "name": "string",
   "commanderId": 1,
   "companyId": null,
+  "isOpen": true,
   "createdAt": "2025-01-01T12:00:00Z",
   "updatedAt": "2025-01-01T12:00:00Z"
 }
@@ -141,6 +142,7 @@ Response `200`: `SquadDto` + список участников:
   "name": "string",
   "commanderId": 1,
   "companyId": null,
+  "isOpen": true,
   "members": [
     { "userId": 1, "joinedAt": "2025-01-01T12:00:00Z" }
   ],
@@ -153,11 +155,16 @@ Response `200`: `SquadDto` + список участников:
 - `404 SQUAD_NOT_FOUND` (если пользователь не состоит в отряде)
 
 ### POST `/squads/my/join`
-Вступить в существующий отряд по invite-коду.
+Вступить в существующий открытый отряд (isOpen = true).
 
+Условия вступления:
+- пользователь не состоит в другом отряде;
+- отряд существует;
+- `isOpen = true`.
+- 
 Request:
 ```json
-{ "inviteCode": "string" }
+{ "squadId": 10 }
 ```
 
 Response `200`: `SquadDto`
@@ -167,7 +174,8 @@ WS событие: `JOINED_SQUAD` (канал `SQUAD`, channelId=`squadId`).
 Ошибки:
 - `404 SQUAD_NOT_FOUND`
 - `409 ALREADY_IN_SQUAD`
-- `403 FORBIDDEN` (например, если будет правило “отряд заполнен”) или `400 VALIDATION_ERROR`
+- 403 FORBIDDEN (если `isOpen = false`)
+- 400 VALIDATION_ERROR
 
 ### POST `/squads/my/leave`
 Выйти из текущего отряда.
@@ -226,10 +234,14 @@ WS событие: `SQUAD_DISBANDED` (канал `SQUAD`, channelId=`squadId`).
 
 ### POST `/companies`
 Создать компанию. Создатель становится командиром компании.
+- `isOpen` — определяет, может ли отряд вступать в компанию.
 
 Request:
 ```json
-{ "name": "string" }
+{ 
+  "name": "string",
+  "isOpen": true
+}
 ```
 
 Response `200`:
@@ -237,22 +249,24 @@ Response `200`:
 {
   "id": 50,
   "name": "string",
-  "commanderId": 1,
+  "isOpen": true,
   "createdAt": "2025-01-01T12:00:00Z",
   "updatedAt": "2025-01-01T12:00:00Z"
 }
 ```
 
 ### GET `/companies/my`
-Возвращает компанию, где текущий пользователь является командиром (MVP),
-или `404`, если компании нет.
+Возвращает компанию, в которую входит отряд текущего пользователя,
+или `404`, если:
+- пользователь не состоит в отряде, или
+- отряд пользователя не состоит в компании.
 
 Response `200`: `CompanyDto` + список отрядов:
 ```json
 {
   "id": 50,
   "name": "string",
-  "commanderId": 1,
+  "isOpen": true,
   "squads": [
     { "id": 10, "name": "string", "commanderId": 2 }
   ],
@@ -262,7 +276,9 @@ Response `200`: `CompanyDto` + список отрядов:
 ```
 
 ### POST `/companies/my/add-squad`
-Привязать отряд к компании (только командир компании).
+Привязать отряд к компании (командир отряда, входящего в компанию).
+Отряд может быть добавлен только если `isOpen = true`.
+Если `isOpen = false`, сервер возвращает `403 FORBIDDEN`.
 
 Request:
 ```json
@@ -277,7 +293,7 @@ Response `200`:
 WS событие: `SQUAD_JOINED_COMPANY` (канал `COMPANY`, channelId=`companyId`).
 
 ### POST `/companies/my/remove-squad`
-Отвязать отряд от компании.
+Отвязать отряд от компании(командир отряда, входящего в компанию и являющийся командиром этого отряда).
 
 Request:
 ```json
@@ -292,7 +308,7 @@ Response `200`:
 WS событие: `SQUAD_LEFT_COMPANY` (канал `COMPANY`, channelId=`companyId`).
 
 ### POST `/companies/my/disband`
-Распустить компанию (только командир).
+Распустить компанию (только командир отряда, в случае если этот отряд единственный в компании).
 
 Response `200`:
 ```json
@@ -300,6 +316,41 @@ Response `200`:
 ```
 
 WS событие: `COMPANY_DISBANDED` (канал `COMPANY`, channelId=`companyId`).
+
+## Типы тактических меток (TacticalMarkerType)
+
+Тип метки определяет правила создания и поведения меток.
+
+### TacticalMarkerTypeDto
+
+```json
+{
+  "id": 1,
+  "key": "ENEMY_SPOTTED",
+  "name": "Enemy spotted",
+  "defaultDescription": "string|null",
+  "icon": "string",
+  "defaultLifetimeSeconds": 600,
+  "roleRestriction": "ANY_MEMBER|COMMANDER_ONLY",
+  "canSendToCompany": true,
+  "uniquenessPolicy": "NONE|ONE_PER_USER|ONE_PER_SQUAD",
+  "active": true
+}
+```
+### GET `/marker-types`
+Возвращает список активных типов меток.
+
+Response `200`:
+```json
+{
+  "items": [ /* TacticalMarkerTypeDto */ ]
+}
+```
+### POST `/admin/marker-types`
+Создание нового типа метки (только ADMIN).
+
+### PATCH `/admin/marker-types/{id}`
+Изменение типа метки (только ADMIN).
 
 ## Метки (Markers)
 
@@ -311,40 +362,43 @@ WS событие: `COMPANY_DISBANDED` (канал `COMPANY`, channelId=`company
 Request:
 ```json
 {
-  "title": "string",
-  "description": "string|null",
+  "markerTypeId": 1,
   "lat": 56.123456,
   "lon": 24.123456,
-  "visibility": "SQUAD|COMPANY|GLOBAL",
-  "squadId": 10,
-  "companyId": 50,
+  "description": "string|null",
+  "sendToCompany": true,
   "expiresAt": "2025-01-01T14:00:00Z|null"
 }
 ```
 
 Правила:
-- Для `SQUAD` должно быть задано `squadId`.
-- Для `COMPANY` должно быть задано `companyId`.
-- Для `GLOBAL` оба поля `squadId` и `companyId` должны быть `null`.
+
+- Автор должен состоять в отряде.
+- Метка всегда создаётся в рамках отряда автора.
+- Если `sendToCompany = true`,
+  сервер проверяет:
+    - что отряд состоит в компании;
+    - что тип метки допускает отправку в компанию
+      (`TacticalMarkerType.canSendToCompany = true`).
 
 Response `200`:
 ```json
 {
   "id": 900,
+  "markerTypeId": 1,
   "creatorId": 1,
-  "title": "string",
-  "description": null,
+  "squadId": 10,
+  "companyId": 50,
   "lat": 56.123456,
   "lon": 24.123456,
-  "visibility": "SQUAD",
-  "squadId": 10,
-  "companyId": null,
+  "description": null,
   "expiresAt": null,
   "createdAt": "2025-01-01T12:00:00Z"
 }
 ```
+companyId заполняется только если sendToCompany = true.
 
-WS событие: `MARKER_CREATED` (канал зависит от visibility; см. `spec-ws.md`).
+WS событие: `MARKER_CREATED` (канал зависит от companyId; см. `spec-ws.md`).
 
 ### GET `/markers`
 Список меток, видимых текущему пользователю.
@@ -451,9 +505,15 @@ Response `200`:
 ```
 
 Видимость (MVP):
-- Пользователи в одном отряде видимы друг другу.
-- Командир компании может видеть участников отрядов, привязанных к компании (если реализовано в MVP).
 
+Пользователь видит:
+- последнюю позицию всех участников своего отряда;
+- последнюю позицию командиров всех отрядов,
+  входящих в ту же компанию, что и его отряд.
+
+
+  Если пользователь не состоит в отряде —
+  видимость ограничивается только его собственной позицией.
 ## Admin (MVP)
 
 ### PATCH `/admin/users/{userId}/account-status`
@@ -472,3 +532,75 @@ Response `200`:
 Эффекты:
 - Любой защищённый REST-запрос этого пользователя должен возвращать `403 ACCOUNT_BLOCKED|ACCOUNT_DELETED`.
 - WS соединения этого пользователя должны быть отклонены/закрыты.
+
+### POST `/admin/marker-types`
+Создать новый тип тактической метки (только ADMIN).
+
+Request:
+```json
+{
+  "key": "ENEMY_SPOTTED",
+  "name": "Enemy spotted",
+  "defaultDescription": "string|null",
+  "icon": "string",
+  "defaultLifetimeSeconds": 600,
+  "roleRestriction": "ANY_MEMBER|COMMANDER_ONLY",
+  "canSendToCompany": true,
+  "uniquenessPolicy": "NONE|ONE_PER_USER|ONE_PER_SQUAD",
+  "active": true
+}
+```
+Response `200`:
+```json
+{
+  "id": 1,
+  "key": "ENEMY_SPOTTED",
+  "name": "Enemy spotted",
+  "defaultDescription": null,
+  "icon": "string",
+  "defaultLifetimeSeconds": 600,
+  "roleRestriction": "ANY_MEMBER",
+  "canSendToCompany": true,
+  "uniquenessPolicy": "NONE",
+  "active": true
+}
+```
+
+Ошибки:
+- 400 VALIDATION_ERROR
+- 409 MARKER_TYPE_ALREADY_EXISTS
+- 403 FORBIDDEN
+- 401 UNAUTHORIZED
+
+### PATCH `/admin/marker-types/{id}`
+
+Изменить существующий тип метки (только ADMIN).
+
+Request (частичное обновление):
+```json
+{
+  "name": "string|null",
+  "defaultDescription": "string|null",
+  "icon": "string|null",
+  "defaultLifetimeSeconds": 300,
+  "roleRestriction": "ANY_MEMBER|COMMANDER_ONLY",
+  "canSendToCompany": false,
+  "uniquenessPolicy": "NONE|ONE_PER_USER|ONE_PER_SQUAD",
+  "active": false
+}
+```
+Response `200`: `TacticalMarkerTypeDto`
+
+Ошибки:
+- 404 MARKER_TYPE_NOT_FOUND
+- 400 VALIDATION_ERROR
+- 403 FORBIDDEN
+- 401 UNAUTHORIZED
+
+### GET `/admin/marker-types`
+
+Возвращает список всех типов меток (включая `active=false`).
+
+Response `200`:
+```json
+{ "items": [ /* TacticalMarkerTypeDto */ ] }
