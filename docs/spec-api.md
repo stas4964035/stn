@@ -161,7 +161,7 @@ Response `200`: `SquadDto` + список участников:
 - пользователь не состоит в другом отряде;
 - отряд существует;
 - `isOpen = true`.
-- 
+
 Request:
 ```json
 { "squadId": 10 }
@@ -197,6 +197,7 @@ WS событие: `LEFT_SQUAD` (канал `SQUAD`, channelId=`squadId`).
   - Если отряд состоял в компании — применяются те же WS эффекты, что и при отвязке/удалении:
     - `SQUAD_LEFT_COMPANY` (канал `COMPANY`, channelId=`companyId`);
     - и, если после этого в компании не осталось отрядов, `COMPANY_DISBANDED`.
+
 ### POST `/squads/my/kick`
 Командир исключает участника.
 
@@ -333,9 +334,8 @@ Response `200`:
 { "disbanded": true }
 ```
 
-WS события:
-- `SQUAD_LEFT_COMPANY` (канал `COMPANY`, `channelId=companyId`).
-- Если после отвязки в компании не осталось отрядов и компания удаляется — дополнительно эмитить `COMPANY_DISBANDED` (канал `COMPANY`, `channelId=companyId`).
+WS событие: `COMPANY_DISBANDED` (канал `COMPANY`, `channelId=companyId`).
+
 ## Типы тактических меток (TacticalMarkerType)
 
 Тип метки определяет правила создания и поведения меток.
