@@ -21,7 +21,7 @@
 
 **Технологический стек (целевой):**
 
-- Backend: Java (LTS 17/21), Spring Boot 3.x, PostgreSQL, Redis, WebSocket, JWT.
+- Backend: Java 21, Spring Boot 4.x, PostgreSQL, Redis, WebSocket, JWT.
 - Frontend: web-клиент (MVP — простой, без завязки на конкретный фреймворк; возможен переход к SPA).
 
 ---
@@ -629,7 +629,7 @@
 
 ### 5.2. Стек
 
-- Java LTS (17/21), Spring Boot 3.x.
+- Java 21, Spring Boot 4.x.
 - PostgreSQL для доменных данных.
 - Redis:
   - как Pub/Sub для чатов и событий,

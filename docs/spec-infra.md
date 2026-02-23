@@ -50,6 +50,6 @@
 
 ## Deployment defaults (MVP)
 
-- Java 17/21 + Spring Boot 3.x
+- Java 21 + Spring Boot 4.x
 - Postgres
 - Redis (опционально в MVP; потребуется позже для масштабирования WS / кэша / token revocation)
