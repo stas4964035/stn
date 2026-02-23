@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: stn
+  datasource:
+    url: jdbc:postgresql://localhost:5432/tactical
+    username: tactical
+    password: tactical
+  jpa:
+    open-in-view: false
+  flyway:
+    enabled: true

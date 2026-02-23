@@ -37,7 +37,7 @@ Response `200`:
     "nickname": "string",
     "accountStatus": "ACTIVE",
     "role": "USER",
-    "avatarUrl": null,
+    "avatarIcon": null,
     "isAlive": true,
     "createdAt": "2025-01-01T12:00:00Z",
     "updatedAt": "2025-01-01T12:00:00Z"
@@ -82,7 +82,7 @@ Request:
 ```json
 {
   "nickname": "string",
-  "avatarUrl": "string|null"
+  "avatarIcon": "string|null"
 }
 ```
 
@@ -118,9 +118,11 @@ Response `200`:
 {
   "id": 10,
   "name": "string",
+  "description": null,  
   "commanderId": 1,
   "companyId": null,
   "isOpen": true,
+  "color": "red",
   "createdAt": "2025-01-01T12:00:00Z",
   "updatedAt": "2025-01-01T12:00:00Z"
 }
@@ -140,9 +142,11 @@ Response `200`: `SquadDto` + список участников:
 {
   "id": 10,
   "name": "string",
+  "description": null,
   "commanderId": 1,
   "companyId": null,
   "isOpen": true,
+  "color": "red",
   "members": [
     { "userId": 1, "joinedAt": "2025-01-01T12:00:00Z" }
   ],
@@ -174,8 +178,8 @@ WS событие: `JOINED_SQUAD` (канал `SQUAD`, channelId=`squadId`).
 Ошибки:
 - `404 SQUAD_NOT_FOUND`
 - `409 ALREADY_IN_SQUAD`
-- 403 FORBIDDEN (если `isOpen = false`)
-- 400 VALIDATION_ERROR
+- `403 FORBIDDEN` (если `isOpen = false`)
+- `400 VALIDATION_ERROR`
 
 ### POST `/squads/my/leave`
 Выйти из текущего отряда.
@@ -257,18 +261,20 @@ Request:
 ```
 
 Response `200`:
+
 ```json
 {
   "id": 50,
   "name": "string",
+  "description": null,
   "isOpen": true,
   "createdAt": "2025-01-01T12:00:00Z",
   "updatedAt": "2025-01-01T12:00:00Z"
 }
 ```
 Ошибки:
-- 403 FORBIDDEN (если не командир отряда)
-- 404 SQUAD_NOT_FOUND (если пользователь не в отряде)
+- `403 FORBIDDEN` (если не командир отряда)
+- `404 SQUAD_NOT_FOUND` (если пользователь не в отряде)
 
 ### GET `/companies/my`
 Возвращает компанию, в которую входит отряд текущего пользователя,
@@ -281,6 +287,7 @@ Response `200`: `CompanyDto` + список отрядов:
 {
   "id": 50,
   "name": "string",
+  "description": null,
   "isOpen": true,
   "squads": [
     { "id": 10, "name": "string", "commanderId": 2 }
