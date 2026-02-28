@@ -9,7 +9,12 @@ import java.time.Clock;
 public class TimeConfig {
 
     @Bean
-    public Clock clock(){
+    public Clock utcClock(){
         return Clock.systemUTC();
+    }
+
+    @Bean
+    public TimeProvider timeProvider(Clock utcClock){
+        return new SystemTimeProvider(utcClock);
     }
 }

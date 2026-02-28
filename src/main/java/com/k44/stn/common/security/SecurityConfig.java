@@ -22,13 +22,20 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http,
-            RequestLoggingFilter requestLoggingFilter
+            RequestLoggingFilter requestLoggingFilter,
+            RestAuthenticationEntryPoint restAuthenticationEntryPoint,
+            RestAccessDeniedHandler restAccessDeniedHandler
     ) throws Exception{
         http.httpBasic(Customizer.withDefaults());
 
         http.authorizeHttpRequests(auth -> auth
                 .requestMatchers("/test").authenticated()
                 .anyRequest().permitAll()
+        );
+
+        http.exceptionHandling(ex -> ex
+                .authenticationEntryPoint(restAuthenticationEntryPoint)
+                .accessDeniedHandler(restAccessDeniedHandler)
         );
 
         http.csrf(AbstractHttpConfigurer::disable);
