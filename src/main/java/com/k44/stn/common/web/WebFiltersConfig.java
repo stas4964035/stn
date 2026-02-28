@@ -10,11 +10,15 @@ import org.springframework.core.Ordered;
 public class WebFiltersConfig {
 
     @Bean
+    public RequestIdFilter requestIdFilter(){
+        return new RequestIdFilter();
+    }
+
+    @Bean
     public FilterRegistrationBean<RequestIdFilter> requestIdFilterRegistration(RequestIdFilter filter) {
-        FilterRegistrationBean<RequestIdFilter> reg = new FilterRegistrationBean<>();
-        reg.setFilter(filter);
-        reg.addUrlPatterns("/*");
-        reg.setOrder(Ordered.HIGHEST_PRECEDENCE);
-        return reg;
+        FilterRegistrationBean<RequestIdFilter> bean = new FilterRegistrationBean<>();
+        bean.setFilter(new RequestIdFilter());
+        bean.setOrder(Ordered.HIGHEST_PRECEDENCE);
+        return bean;
     }
 }
