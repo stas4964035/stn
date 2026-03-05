@@ -124,6 +124,15 @@ REST семантика:
 
 `uniquenessPolicy ∈ {NONE, ONE_PER_USER, ONE_PER_SQUAD}`
 
+Каноническая область проверки уникальности:
+
+- Уникальность всегда проверяется только по **активному срезу** меток.
+- Метка считается активной, если:
+  - `expiresAt == null`, или
+  - `expiresAt > now(UTC)`.
+- Метки с `expiresAt <= now(UTC)` считаются неактивными и
+  не участвуют в проверке уникальности.
+
 Поведение:
 
 - `NONE`
@@ -142,6 +151,14 @@ REST семантика:
   - При создании новой метки предыдущая активная метка
     данного типа в этом отряде должна быть деактивирована.
 
+Поведение `sendToCompany`:
+
+- Если `sendToCompany = true`, но у отряда автора нет компании,
+  сервер MUST вернуть `404 COMPANY_NOT_FOUND`.
+- Если `sendToCompany = true` и компания есть, но тип не разрешает
+  отправку в компанию (`canSendToCompany = false`), сервер MUST вернуть
+  `403 FORBIDDEN`.
+
 Деактивация метки считается обычным истечением,
 и должна приводить к эмиссии события `MARKER_DELETED`
 (см. spec-ws.md).
@@ -152,6 +169,34 @@ REST семантика:
 - При переходе в `COMPLETED` устанавливается `completedAt`.
 - Каскад при удалении отряда:
   - При удалении/распуске отряда (включая случай, когда выходит последний участник) все приказы данного отряда удаляются.
+
+#### Формальная таблица переходов статусов (канон)
+
+Разрешённые переходы:
+
+| from \ to      | CREATED | IN_PROGRESS | COMPLETED |
+|----------------|---------|-------------|-----------|
+| CREATED        | idempotent | ✅ | ✅ |
+| IN_PROGRESS    | ❌ `INVALID_ORDER_STATUS` | idempotent | ✅ |
+| COMPLETED      | ❌ `INVALID_ORDER_STATUS` | ❌ `INVALID_ORDER_STATUS` | idempotent |
+
+Правила:
+
+- `PATCH /orders/{orderId}/status` с запрещённым переходом MUST вернуть
+  `400 INVALID_ORDER_STATUS`.
+- Идемпотентный переход в тот же статус допустим и возвращает текущий
+  `OrderDto` без изменения бизнес-состояния.
+
+#### Требования к `completedAt`
+
+- При создании приказа (`status=CREATED`) поле `completedAt = null`.
+- При переходе в `COMPLETED`:
+  - если `completedAt == null`, сервер MUST установить
+    `completedAt = now(UTC)`;
+  - если `completedAt` уже заполнен (повторный идемпотентный запрос),
+    значение MUST остаться неизменным.
+- Для статусов `CREATED` и `IN_PROGRESS` поле `completedAt` MUST быть `null`.
+- Любой переход из `COMPLETED` в другой статус запрещён.
 
 ### Геопозиции (Geo)
 
@@ -178,9 +223,26 @@ REST семантика:
   "code": "VALIDATION_ERROR",
   "message": "Human readable message",
   "path": "/api/v1/...",
-  "details": { }
+  "details": {
+    "errors": [
+      {
+        "field": "email",
+        "message": "must be a well-formed email address",
+        "code": "EMAIL_INVALID"
+      }
+    ]
+  }
 }
 ```
+
+Каноничный формат `details.errors[]` для `VALIDATION_ERROR`:
+
+- `details.errors` — массив объектов валидационных ошибок.
+- Каждая ошибка MUST иметь вид:
+  - `field: string` — имя поля (dot-path для вложенных структур),
+  - `message: string` — человекочитаемое описание,
+  - `code: string` — машинный код правила валидации.
+- Для не-валидационных ошибок `details` может быть пустым объектом `{}`.
 
 ### Канонические error codes (MVP)
 

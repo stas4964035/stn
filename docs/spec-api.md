@@ -12,6 +12,7 @@
 - ID: `long`
 - Пагинация: **не в MVP**, если явно не указано.
 - Ошибки: см. `spec-domain.md` (единый формат для REST и WS).
+- Для `400 VALIDATION_ERROR` сервер MUST использовать `details.errors[]` в формате `{field, message, code}`.
 
 ## Аутентификация
 
@@ -406,6 +407,8 @@ Request:
     - что отряд состоит в компании;
     - что тип метки допускает отправку в компанию
       (`TacticalMarkerType.canSendToCompany = true`).
+  Если отряд автора не состоит в компании — вернуть
+  `404 COMPANY_NOT_FOUND`.
 - Eсли `expiresAt` передан → использовать его:
 - иначе если `defaultLifetimeSeconds` у типа задан → вычислить `expiresAt = nowUtc + defaultLifetimeSeconds`
 - иначе `expiresAt=null`
@@ -428,6 +431,11 @@ Response `200`:
 companyId заполняется только если sendToCompany = true.
 
 WS событие: `MARKER_CREATED` (канал зависит от companyId; см. `spec-ws.md`).
+
+Ошибки:
+- `404 COMPANY_NOT_FOUND` (если `sendToCompany=true`, но у отряда автора нет компании)
+- `403 FORBIDDEN` (если `sendToCompany=true`, но `canSendToCompany=false`)
+- `400 VALIDATION_ERROR`
 
 ### GET `/markers`
 Список меток, видимых текущему пользователю.
