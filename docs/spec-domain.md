@@ -99,7 +99,7 @@
 - Деактивация метки осуществляется установкой `expiresAt = now(UTC)`.
 
 REST семантика:
-- `DELETE /api/v1/markers/{markerId}` должна выполнять деактивацию через `expiresAt = now(UTC)`, без физического удаления.
+- `DELETE /markers/{markerId}` должна выполнять деактивацию через `expiresAt = now(UTC)`, без физического удаления.
 - Активной считается метка, если:
   - `expiresAt == null`, или
   - `expiresAt > now(UTC)`.
@@ -216,7 +216,7 @@ REST семантика:
   "status": 400,
   "code": "VALIDATION_ERROR",
   "message": "Human readable message",
-  "path": "/api/v1/...",
+  "path": "/...",
   "details": {
     "errors": [
       {
@@ -256,7 +256,7 @@ Squad / company:
 Markers / orders:
 - `MARKER_NOT_FOUND` (404)
 - `ORDER_NOT_FOUND` (404)
-- `INVALID_ORDER_STATUS` (400)
+
 
 Generic:
 - `VALIDATION_ERROR` (400)

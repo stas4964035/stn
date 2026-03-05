@@ -10,7 +10,7 @@
 
 ## Конвенции
 
-- Base path: `/api/v1`
+- Base path: `/`
 - Content-Type: `application/json; charset=utf-8`
 - Auth: `Authorization: Bearer <jwt>`
 - Время: UTC, ISO-8601, `Instant` (пример: `2025-01-01T12:00:00Z`)

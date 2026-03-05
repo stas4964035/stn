@@ -109,8 +109,8 @@ Payload:
 { "squadId": 10 }
 ```
 Триггеры (MVP):
-- POST `/api/v1/squads/my/disband`
-- POST `/api/v1/squads/my/leave`, если выходит последний участник
+- POST `/squads/my/disband`
+- POST `/squads/my/leave`, если выходит последний участник
   
 Примечание:
 - При `SQUAD_DISBANDED` все `Orders` данного отряда считаются удалёнными (отдельных WS событий удаления приказов в MVP нет).
@@ -135,8 +135,8 @@ Payload:
 { "companyId": 50 }
 ```
 Триггеры (MVP):
-- `POST /api/v1/companies/my/disband`
-- `POST /api/v1/companies/my/remove-squad`, если после отвязки не осталось отрядов и компания удаляется
+- `POST /companies/my/disband`
+- `POST /companies/my/remove-squad`, если после отвязки не осталось отрядов и компания удаляется
   
 Порядок при автоудалении компании: сначала `SQUAD_LEFT_COMPANY`, затем `COMPANY_DISBANDED`.
 
@@ -163,7 +163,7 @@ Payload:
 
 Истечение:
 - Если используется `expiresAt`, сервер должен эмитить `MARKER_DELETED`, когда метка становится неактивной (фоновый sweep).
-- При деактивации метки через REST `DELETE /api/v1/markers/{markerId}` сервер также должен эмитить `MARKER_DELETED`.
+- При деактивации метки через REST `DELETE /markers/{markerId}` сервер также должен эмитить `MARKER_DELETED`.
 - Payload остаётся минимальным (`markerId`), чтобы сохранить стабильность контракта.
 
 ### События приказов (канал: SQUAD)

@@ -45,7 +45,7 @@
 - PostgreSQL — source of truth
 - геопозиции хранятся историей (`user_geo_locations`) с индексом `(user_id, recorded_at desc)`
 - markers содержат `expires_at` и должны фильтроваться по правилам active/expired
-- squads, company_squads и ограничения поддерживают отношения членства/привязки
+- squads и ограничения поддерживают отношения членства/привязки
 
 ## Фоновые задачи
  (MVP)
