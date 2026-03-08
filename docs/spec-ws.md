@@ -39,7 +39,7 @@ Envelope:
 ```json
 {
   "type": "EVENT",
-  "eventType": "JOINED_SQUAD",
+  "eventType": "USER_ASSIGNED_TO_SQUAD",
   "channel": "SQUAD",
   "channelId": 10,
   "payload": { }

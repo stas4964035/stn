@@ -11,7 +11,11 @@
 ## Время и аудит
 
 - Все времена на сервере — UTC (`Instant`)
-- У сущностей(users/squads/companies/orders/marker_types) должны быть `createdAt` и `updatedAt`, где это применимо
+- Для сущностей с изменяемым жизненным циклом
+  (`users`, `squads`, `companies`, `orders`, `tactical_marker_types`)
+  должны использоваться `created_at` и `updated_at`
+- Для append-only таблиц истории допускается отсутствие `created_at` / `updated_at`,
+  если используется специализированное временное поле события
 - Использовать Spring Data JPA auditing (`@CreatedDate`, `@LastModifiedDate`) для авто-заполнения
 
 ## Корреляция запросов
