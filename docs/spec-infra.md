@@ -11,7 +11,7 @@
 ## Время и аудит
 
 - Все времена на сервере — UTC (`Instant`)
-- У сущностей(users/squads/companies/orders/marker_types/user_geo_locations) должны быть `createdAt` и `updatedAt`, где это применимо
+- У сущностей(users/squads/companies/orders/marker_types) должны быть `createdAt` и `updatedAt`, где это применимо
 - Использовать Spring Data JPA auditing (`@CreatedDate`, `@LastModifiedDate`) для авто-заполнения
 
 ## Корреляция запросов

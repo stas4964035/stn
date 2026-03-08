@@ -179,7 +179,7 @@ Request:
 
 Response `200`: `SquadDto`
 
-WS событие: `JOINED_SQUAD` (канал `SQUAD`, channelId=`squadId`).
+WS событие: `USER_ASSIGNED_TO_SQUAD` (канал `SQUAD`, channelId=`squadId`).
 
 Ошибки:
 - `404 SQUAD_NOT_FOUND`
@@ -195,13 +195,13 @@ Response `200`:
 { "left": true }
 ```
 
-WS событие: `LEFT_SQUAD` (канал `SQUAD`, channelId=`squadId`).
+WS событие: `USER_REMOVED_FROM_SQUAD` (канал `SQUAD`, channelId=`squadId`).
 
 Примечания:
 - Если командир выходит и остаются участники, система назначает нового командира и эмитит `BECAME_COMMANDER`.
 - Если выходит последний участник, отряд удаляется.
   - В этом случае сервер должен:
-    - эмитить `LEFT_SQUAD` (как обычно);
+    - эмитить `USER_REMOVED_FROM_SQUAD` (как обычно);
     - затем эмитить `SQUAD_DISBANDED` (канал `SQUAD`, channelId=`squadId`);
     - удалить все приказы (`Orders`) данного отряда (каскад).
   - Если отряд состоял в компании — применяются те же WS эффекты, что и при отвязке/удалении:

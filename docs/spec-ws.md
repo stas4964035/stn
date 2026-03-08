@@ -202,8 +202,8 @@ Payload:
 
 Если клиент или текст сценариев использует имена ниже, они **должны трактоваться как алиасы** к каноническим именам:
 
-- `SQUAD_MEMBER_JOINED` → `JOINED_SQUAD`
-- `SQUAD_MEMBER_LEFT` → `LEFT_SQUAD`
+- `SQUAD_MEMBER_JOINED` → `USER_ASSIGNED_TO_SQUAD`
+- `SQUAD_MEMBER_LEFT` → `USER_REMOVED_FROM_SQUAD`
 - `COMMANDER_CHANGED` → `BECAME_COMMANDER`
 
 Другие алиасы в MVP не поддерживаются.
