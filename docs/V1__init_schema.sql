@@ -207,8 +207,8 @@ CREATE TABLE user_geo_locations (
 
                                     recorded_at TIMESTAMPTZ NOT NULL,
 
-                                    created_at  TIMESTAMPTZ NOT NULL,
-                                    updated_at  TIMESTAMPTZ NOT NULL,
+--                                     created_at  TIMESTAMPTZ NOT NULL,
+--                                     updated_at  TIMESTAMPTZ NOT NULL,
 
                                     CONSTRAINT chk_user_geo_locations_lat CHECK (lat BETWEEN -90 AND 90),
                                     CONSTRAINT chk_user_geo_locations_lon CHECK (lon BETWEEN -180 AND 180),

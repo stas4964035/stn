@@ -55,7 +55,7 @@ Response `200`:
 - `409 USER_ALREADY_EXISTS`
 - `400 VALIDATION_ERROR`
 
-### POST `/auth/email`
+### POST `/auth/login`
 Аутентификация по email/password.
 
 Request:

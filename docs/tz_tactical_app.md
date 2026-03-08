@@ -236,7 +236,7 @@
 - `id`
 - `userId`
 - `lat`, `lon`
-- `timestamp`
+- `recordedAt`
 
 Назначение:
 
@@ -326,7 +326,8 @@
 - `id`
 - `squad: Squad`
 - `author: User` — командир отряда
-- `description` — текст приказа
+- `title` — название 
+- `text` — текст приказа
 - `status` ∈ {CREATED, IN_PROGRESS, COMPLETED}
 - `createdAt`
 - `completedAt` (при `COMPLETED`)
@@ -566,8 +567,8 @@
 - Уровень пользователя/отряда:
   - `SQUAD_CREATED`
   - `BECAME_COMMANDER`
-  - `JOINED_SQUAD`
-  - `LEFT_SQUAD`
+  - `USER_ASSIGNED_TO_SQUAD`
+  - `USER_REMOVED_FROM_SQUAD`
   - `KICKED_FROM_SQUAD`
   - `SQUAD_DISBANDED`
 - Уровень роты:
@@ -636,7 +637,7 @@
 ### 5.1. Архитектура
 
 - Монолитное Spring Boot приложение с модульной структурой по доменам:
-  - `auth`, `users`, `squads`, `companies`, `geo`, `markers`, `orders`, `chat`, `notifications`.
+  - `auth`, `users`, `squads`, `companies`, `geo`, `markers`, `orders`, `realtime`.
 - Чёткое разделение доменной логики и инфраструктуры.
 
 ### 5.2. Стек
@@ -644,8 +645,11 @@
 - Java 21, Spring Boot 4.x.
 - PostgreSQL для доменных данных.
 - Redis:
-  - как Pub/Sub для чатов и событий,
-  - опционально как кэш.
+  - WebSocket event bus
+  - token revocation
+  - кэширования часто читаемых данных
+  - хранения актуального состояния карты
+  - distributed locks
 - WebSocket (возможен STOMP поверх WS).
 - JWT для аутентификации.
 
