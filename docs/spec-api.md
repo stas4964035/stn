@@ -387,7 +387,7 @@ WS событие: `COMPANY_DISBANDED` (канал `COMPANY`, `channelId=company
   "defaultLifetimeSeconds": 600,
   "roleRestriction": "ANY_MEMBER|COMMANDER_ONLY",
   "canSendToCompany": true,
-  "uniquenessPolicy": "NONE|ONE_PER_USER|ONE_PER_SQUAD",
+  "uniquenessPolicy": "NONE|ONE_PER_USER",
   "active": true
 }
 ```
@@ -654,7 +654,7 @@ Request:
   "defaultLifetimeSeconds": 600,
   "roleRestriction": "ANY_MEMBER|COMMANDER_ONLY",
   "canSendToCompany": true,
-  "uniquenessPolicy": "NONE|ONE_PER_USER|ONE_PER_SQUAD",
+  "uniquenessPolicy": "NONE|ONE_PER_USER",
   "active": true
 }
 ```
@@ -693,7 +693,7 @@ Request (частичное обновление):
   "defaultLifetimeSeconds": 300,
   "roleRestriction": "ANY_MEMBER|COMMANDER_ONLY",
   "canSendToCompany": false,
-  "uniquenessPolicy": "NONE|ONE_PER_USER|ONE_PER_SQUAD",
+  "uniquenessPolicy": "NONE|ONE_PER_USER",
   "active": false
 }
 ```

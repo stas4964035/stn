@@ -282,7 +282,7 @@
 - `defaultLifetimeSeconds` (может быть `null`).
 - `roleRestriction` ∈ {`ANY_MEMBER`, `COMMANDER_ONLY`}
 - `canSendToCompany` (bool)
-- `uniquenessPolicy` ∈ {`NONE`, `ONE_PER_USER`, `ONE_PER_SQUAD`}
+- `uniquenessPolicy` ∈ {`NONE`, `ONE_PER_USER`}
 - `category` (опционально)
 - `active` (bool)
 
@@ -321,7 +321,7 @@
 - автор должен иметь права согласно `markerType.roleRestriction`;
 - если метка ротная, тип должен иметь `canSendToCompany = true`;
 - если указан `defaultLifetimeSeconds`, при создании вычисляется `expiresAt`;
-- при `uniquenessPolicy = ONE_PER_USER`/`ONE_PER_SQUAD` старые активные метки соответствующего типа удаляются/деактивируются;
+- при `uniquenessPolicy = ONE_PER_USER` старые активные метки соответствующего типа удаляются/деактивируются;
 - тип `ENEMY_SPOTTED`:
   - доступен всем членам отряда;
   - по умолчанию живёт 10 минут;

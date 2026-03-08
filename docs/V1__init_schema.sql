@@ -11,7 +11,7 @@ CREATE TYPE system_role_enum AS ENUM ('ADMIN', 'MODERATOR', 'USER');
 
 CREATE TYPE marker_role_restriction_enum AS ENUM ('ANY_MEMBER', 'COMMANDER_ONLY');
 
-CREATE TYPE marker_uniqueness_policy_enum AS ENUM ('NONE', 'ONE_PER_USER', 'ONE_PER_SQUAD');
+CREATE TYPE marker_uniqueness_policy_enum AS ENUM ('NONE', 'ONE_PER_USER');
 
 CREATE TYPE order_status_enum AS ENUM ('CREATED', 'IN_PROGRESS', 'COMPLETED');
 
@@ -207,8 +207,6 @@ CREATE TABLE user_geo_locations (
 
                                     recorded_at TIMESTAMPTZ NOT NULL,
 
---                                     created_at  TIMESTAMPTZ NOT NULL,
---                                     updated_at  TIMESTAMPTZ NOT NULL,
 
                                     CONSTRAINT chk_user_geo_locations_lat CHECK (lat BETWEEN -90 AND 90),
                                     CONSTRAINT chk_user_geo_locations_lon CHECK (lon BETWEEN -180 AND 180),

@@ -99,8 +99,12 @@ stn:{env}:map:marker:{markerId}
 
 ```
 stn:{env}:marker-unique:user:{userId}:type:{markerTypeId}  
-stn:{env}:marker-unique:squad:{squadId}:type:{markerTypeId}
 ```
+Используется для типов меток с `uniquenessPolicy = ONE_PER_USER`.
+
+Ключ фиксирует наличие активной метки данного типа
+у пользователя и используется для быстрого контроля уникальности.
+
 ## Distributed locks
 
 `stn:{env}:lock:marker-sweep`
