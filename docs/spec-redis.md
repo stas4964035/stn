@@ -56,7 +56,8 @@ stn:prod:auth:jwt-revoked:{jti}
 
 ## WebSocket
 
-```stn:{env}:ws:pubsub:user:{userId}  
+```
+stn:{env}:ws:pubsub:user:{userId}  
 stn:{env}:ws:pubsub:squad:{squadId}  
 stn:{env}:ws:pubsub:company:{companyId}  
 stn:{env}:ws:pubsub:global
@@ -67,12 +68,14 @@ stn:{env}:ws:session-meta:{sessionId}
 ```
 ## Cache
 
-```stn:{env}:cache:marker-type:{markerTypeId}  
+```
+stn:{env}:cache:marker-type:{markerTypeId}  
 stn:{env}:cache:marker-types:all
 ```
 ## Membership
 
-```stn:{env}:membership:user-squad:{userId}  
+```
+stn:{env}:membership:user-squad:{userId}  
 stn:{env}:membership:user-company:{userId}  
 stn:{env}:membership:squad-members:{squadId}  
 stn:{env}:membership:company-squads:{companyId}
@@ -87,13 +90,15 @@ stn:{env}:membership:company-squads:{companyId}
 
 ## Map
 
-```stn:{env}:map:active-markers:squad:{squadId}  
+```
+stn:{env}:map:active-markers:squad:{squadId}  
 stn:{env}:map:active-markers:company:{companyId}  
 stn:{env}:map:marker:{markerId}
 ```
 ## Marker uniqueness
 
-```stn:{env}:marker-unique:user:{userId}:type:{markerTypeId}  
+```
+stn:{env}:marker-unique:user:{userId}:type:{markerTypeId}  
 stn:{env}:marker-unique:squad:{squadId}:type:{markerTypeId}
 ```
 ## Distributed locks
@@ -104,25 +109,25 @@ stn:{env}:marker-unique:squad:{squadId}:type:{markerTypeId}
 
 # Таблица использования ключей
 
-| Ключ | Тип Redis | TTL                                   | Кто пишет | Кто читает |
-|-----|-----|---------------------------------------|-----|-----|
-| auth:user-token-version:{userId} | string | без TTL                               | auth service | auth middleware |
-| ws:user-sessions:{userId} | set | пока активны WS                       | websocket service | websocket service |
-| ws:session-meta:{sessionId} | hash | пока жива сессия                      | websocket service | websocket service |
-| cache:marker-type:{markerTypeId} | hash | долгий TTL                            | backend cache layer | backend services |
-| cache:marker-types:all | string/json | долгий TTL                            | backend cache layer | backend services |
-| membership:user-squad:{userId} | string | без TTL                               | membership service | visibility / geo |
-| membership:user-company:{userId} | string | без TTL                               | membership service | visibility / geo |
-| membership:squad-members:{squadId} | set | без TTL                               | membership service | visibility / map |
-| membership:company-squads:{companyId} | set | без TTL                               | membership service | visibility / map |
-| visibility:user-visible-users:{userId} | set | без TTL                               | visibility service | geo / map |
-| geo:user-last-pos:{userId} | hash | ограниченный TTL(2 × update interval) | geo service | map service |
-| map:active-markers:squad:{squadId} | set | до истечения маркеров                 | marker service | map service |
-| map:active-markers:company:{companyId} | set | до истечения маркеров                 | marker service | map service |
-| map:marker:{markerId} | hash | до expiresAt                          | marker service | map service |
-| marker-unique:user:{userId}:type:{markerTypeId} | string | lifetime маркера                      | marker service | marker service |
-| marker-unique:squad:{squadId}:type:{markerTypeId} | string | lifetime маркера                      | marker service | marker service |
-| lock:marker-sweep | string | короткий TTL                          | scheduler | scheduler |
+| Ключ | Тип Redis | TTL                                      | Кто пишет | Кто читает |
+|-----|-----|------------------------------------------|-----|-----|
+| auth:user-token-version:{userId} | string | без TTL                                  | auth service | auth middleware |
+| ws:user-sessions:{userId} | set | пока активны WS                          | websocket service | websocket service |
+| ws:session-meta:{sessionId} | hash | пока жива сессия                         | websocket service | websocket service |
+| cache:marker-type:{markerTypeId} | hash | долгий TTL                               | backend cache layer | backend services |
+| cache:marker-types:all | string/json | долгий TTL                               | backend cache layer | backend services |
+| membership:user-squad:{userId} | string | без TTL                                  | membership service | visibility / geo |
+| membership:user-company:{userId} | string | без TTL                                  | membership service | visibility / geo |
+| membership:squad-members:{squadId} | set | без TTL                                  | membership service | visibility / map |
+| membership:company-squads:{companyId} | set | без TTL                                  | membership service | visibility / map |
+| visibility:user-visible-users:{userId} | set | без TTL                                  | visibility service | geo / map |
+| geo:user-last-pos:{userId} | hash | 2 × update interval (для MVP: 60 секунд) | geo service | map service |
+| map:active-markers:squad:{squadId} | set | до истечения маркеров                    | marker service | map service |
+| map:active-markers:company:{companyId} | set | до истечения маркеров                    | marker service | map service |
+| map:marker:{markerId} | hash | до expiresAt                             | marker service | map service |
+| marker-unique:user:{userId}:type:{markerTypeId} | string | lifetime маркера                         | marker service | marker service |
+| marker-unique:squad:{squadId}:type:{markerTypeId} | string | lifetime маркера                         | marker service | marker service |
+| lock:marker-sweep | string | короткий TTL                             | scheduler | scheduler |
 
 ---
 
@@ -152,9 +157,10 @@ stn:{env}:marker-unique:squad:{squadId}:type:{markerTypeId}
 ### marker type изменён
 
 инвалидируется:
-
+```
 cache:marker-type:{id}  
 cache:marker-types:all
+```
 
 ---
 
@@ -162,50 +168,52 @@ cache:marker-types:all
 
 инвалидируется:
 
+```
 membership:user-squad:{userId}  
 membership:squad-members:{squadId}  
 visibility:user-visible-users:{userId}
-
+```
 ---
 
 ### company membership изменён
 
 инвалидируется:
 
+```
 membership:user-company:{userId}  
 membership:company-squads:{companyId}  
 visibility:user-visible-users:{userId}
-
+```
 ---
 
 ### маркер создан
 
 обновляется:
-
+```
 map:marker:{markerId}  
 map:active-markers:*  
 marker-unique:*
-
+```
 ---
 
 ### маркер удалён или истёк
 
 удаляется:
-
+```
 map:marker:{markerId}  
 marker-unique:*
-
+```
 обновляется:
 
-map:active-markers:*
-
+`map:active-markers:*
+`
 ---
 
 ### новая геопозиция
 
 обновляется:
 
-geo:user-last-pos:{userId}
+`geo:user-last-pos:{userId}`
 
 ---
 
@@ -215,16 +223,17 @@ geo:user-last-pos:{userId}
 
 события:
 
-- USER_ASSIGNED_TO_SQUAD
-- USER_REMOVED_FROM_SQUAD
-- SQUAD_ASSIGNED_TO_COMPANY
-- SQUAD_REMOVED_FROM_COMPANY
+- `USER_ASSIGNED_TO_SQUAD`
+- `USER_REMOVED_FROM_SQUAD`
+- `SQUAD_ASSIGNED_TO_COMPANY`
+- `SQUAD_REMOVED_FROM_COMPANY`
 
 обновляют:
 
+```
 membership:*  
 visibility:*
-
+```
 ---
 
 ## Visibility
@@ -237,7 +246,28 @@ visibility:*
 
 обновляет:
 
-visibility:user-visible-users:{userId}
+`visibility:user-visible-users:{userId}`
+
+### Инвалидация visibility cache
+
+Ключи `visibility:user-visible-users:{userId}` должны инвалидироваться
+при любом изменении membership, влияющем на правила видимости.
+
+К таким событиям относятся:
+
+- `USER_ASSIGNED_TO_SQUAD`
+- `USER_REMOVED_FROM_SQUAD`
+- `SQUAD_JOINED_COMPANY`
+- `SQUAD_LEFT_COMPANY`
+
+Для MVP используется стратегия:
+
+- affected visibility keys удаляются из Redis;
+- пересчёт выполняется лениво при следующем запросе,
+  которому требуется visibility read-model.
+
+Синхронный пересчёт visibility read-model при каждом событии
+в MVP не требуется.
 
 ---
 
