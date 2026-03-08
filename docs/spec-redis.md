@@ -44,53 +44,61 @@ stn:prod:auth:jwt-revoked:{jti}
 
 ## Auth
 
-stn:{env}:auth:jwt-revoked:{jti}  
-stn:{env}:auth:user-token-version:{userId}
+`stn:{env}:auth:user-token-version:{userId}`
+
+Данный ключ хранит текущую версию JWT пользователя.
+
+Каждый JWT содержит claim tokenVersion.
+
+Если значение tokenVersion в JWT отличается
+от значения Redis key auth:user-token-version:{userId},
+токен считается недействительным.
 
 ## WebSocket
 
-stn:{env}:ws:pubsub:user:{userId}  
+```stn:{env}:ws:pubsub:user:{userId}  
 stn:{env}:ws:pubsub:squad:{squadId}  
 stn:{env}:ws:pubsub:company:{companyId}  
 stn:{env}:ws:pubsub:global
-
+```
+```
 stn:{env}:ws:user-sessions:{userId}  
 stn:{env}:ws:session-meta:{sessionId}
-
+```
 ## Cache
 
-stn:{env}:cache:marker-type:{markerTypeId}  
+```stn:{env}:cache:marker-type:{markerTypeId}  
 stn:{env}:cache:marker-types:all
-
+```
 ## Membership
 
-stn:{env}:membership:user-squad:{userId}  
+```stn:{env}:membership:user-squad:{userId}  
 stn:{env}:membership:user-company:{userId}  
 stn:{env}:membership:squad-members:{squadId}  
 stn:{env}:membership:company-squads:{companyId}
-
+```
 ## Visibility
 
-stn:{env}:visibility:user-visible-users:{userId}
+`stn:{env}:visibility:user-visible-users:{userId}`
 
 ## Geo
 
-stn:{env}:geo:user-last-pos:{userId}
+`stn:{env}:geo:user-last-pos:{userId}`
 
 ## Map
 
-stn:{env}:map:active-markers:squad:{squadId}  
+```stn:{env}:map:active-markers:squad:{squadId}  
 stn:{env}:map:active-markers:company:{companyId}  
 stn:{env}:map:marker:{markerId}
-
+```
 ## Marker uniqueness
 
-stn:{env}:marker-unique:user:{userId}:type:{markerTypeId}  
+```stn:{env}:marker-unique:user:{userId}:type:{markerTypeId}  
 stn:{env}:marker-unique:squad:{squadId}:type:{markerTypeId}
-
+```
 ## Distributed locks
 
-stn:{env}:lock:marker-sweep
+`stn:{env}:lock:marker-sweep`
 
 ---
 
@@ -98,7 +106,6 @@ stn:{env}:lock:marker-sweep
 
 | Ключ | Тип Redis | TTL                                   | Кто пишет | Кто читает |
 |-----|-----|---------------------------------------|-----|-----|
-| auth:jwt-revoked:{jti} | string | до истечения JWT                      | auth service | auth middleware |
 | auth:user-token-version:{userId} | string | без TTL                               | auth service | auth middleware |
 | ws:user-sessions:{userId} | set | пока активны WS                       | websocket service | websocket service |
 | ws:session-meta:{sessionId} | hash | пока жива сессия                      | websocket service | websocket service |
