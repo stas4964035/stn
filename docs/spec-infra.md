@@ -86,7 +86,7 @@ Redis event bus используется для распространения �
 - `MARKER_CREATED`
 - `MARKER_DELETED`
 - `ORDER_CREATED`
-- `ORDER_UPDATED`
+- `ORDER_STATUS_CHANGED`
 - `USER_BLOCKED`
 - `USER_STATUS_CHANGED`
 - `GEO_POSITION_UPDATED`

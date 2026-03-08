@@ -98,13 +98,13 @@ Payload:
 { "squadId": 10, "commanderId": 123 }
 ```
 
-3) `JOINED_SQUAD`
+3) `USER_ASSIGNED_TO_SQUAD`
 Payload:
 ```json
 { "squadId": 10, "userId": 123 }
 ```
 
-4) `LEFT_SQUAD`
+4) `USER_REMOVED_FROM_SQUAD`
 Payload:
 ```json
 { "squadId": 10, "userId": 123 }

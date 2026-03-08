@@ -96,26 +96,26 @@ stn:{env}:lock:marker-sweep
 
 # Таблица использования ключей
 
-| Ключ | Тип Redis | TTL | Кто пишет | Кто читает |
-|-----|-----|-----|-----|-----|
-| auth:jwt-revoked:{jti} | string | до истечения JWT | auth service | auth middleware |
-| auth:user-token-version:{userId} | string | без TTL | auth service | auth middleware |
-| ws:user-sessions:{userId} | set | пока активны WS | websocket service | websocket service |
-| ws:session-meta:{sessionId} | hash | пока жива сессия | websocket service | websocket service |
-| cache:marker-type:{markerTypeId} | hash | долгий TTL | backend cache layer | backend services |
-| cache:marker-types:all | string/json | долгий TTL | backend cache layer | backend services |
-| membership:user-squad:{userId} | string | без TTL | membership service | visibility / geo |
-| membership:user-company:{userId} | string | без TTL | membership service | visibility / geo |
-| membership:squad-members:{squadId} | set | без TTL | membership service | visibility / map |
-| membership:company-squads:{companyId} | set | без TTL | membership service | visibility / map |
-| visibility:user-visible-users:{userId} | set | без TTL | visibility service | geo / map |
-| geo:user-last-pos:{userId} | hash | ограниченный TTL | geo service | map service |
-| map:active-markers:squad:{squadId} | set | до истечения маркеров | marker service | map service |
-| map:active-markers:company:{companyId} | set | до истечения маркеров | marker service | map service |
-| map:marker:{markerId} | hash | до expiresAt | marker service | map service |
-| marker-unique:user:{userId}:type:{markerTypeId} | string | lifetime маркера | marker service | marker service |
-| marker-unique:squad:{squadId}:type:{markerTypeId} | string | lifetime маркера | marker service | marker service |
-| lock:marker-sweep | string | короткий TTL | scheduler | scheduler |
+| Ключ | Тип Redis | TTL                                   | Кто пишет | Кто читает |
+|-----|-----|---------------------------------------|-----|-----|
+| auth:jwt-revoked:{jti} | string | до истечения JWT                      | auth service | auth middleware |
+| auth:user-token-version:{userId} | string | без TTL                               | auth service | auth middleware |
+| ws:user-sessions:{userId} | set | пока активны WS                       | websocket service | websocket service |
+| ws:session-meta:{sessionId} | hash | пока жива сессия                      | websocket service | websocket service |
+| cache:marker-type:{markerTypeId} | hash | долгий TTL                            | backend cache layer | backend services |
+| cache:marker-types:all | string/json | долгий TTL                            | backend cache layer | backend services |
+| membership:user-squad:{userId} | string | без TTL                               | membership service | visibility / geo |
+| membership:user-company:{userId} | string | без TTL                               | membership service | visibility / geo |
+| membership:squad-members:{squadId} | set | без TTL                               | membership service | visibility / map |
+| membership:company-squads:{companyId} | set | без TTL                               | membership service | visibility / map |
+| visibility:user-visible-users:{userId} | set | без TTL                               | visibility service | geo / map |
+| geo:user-last-pos:{userId} | hash | ограниченный TTL(2 × update interval) | geo service | map service |
+| map:active-markers:squad:{squadId} | set | до истечения маркеров                 | marker service | map service |
+| map:active-markers:company:{companyId} | set | до истечения маркеров                 | marker service | map service |
+| map:marker:{markerId} | hash | до expiresAt                          | marker service | map service |
+| marker-unique:user:{userId}:type:{markerTypeId} | string | lifetime маркера                      | marker service | marker service |
+| marker-unique:squad:{squadId}:type:{markerTypeId} | string | lifetime маркера                      | marker service | marker service |
+| lock:marker-sweep | string | короткий TTL                          | scheduler | scheduler |
 
 ---
 
