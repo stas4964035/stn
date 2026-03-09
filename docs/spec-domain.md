@@ -5,12 +5,6 @@
 - единую модель ошибок (`ErrorResponse`) для backend-контрактов;
 - security-правила (JWT validation, account status, WS policy).
 
-Правило приоритета:
-1. `tz_tactical_app.md` — главный продуктовый канон.
-2. `spec-domain.md` — техническая детализация домена без изменения смысла ТЗ.
-3. `spec-api.md`, `spec-ws.md`, `spec-infra.md`, `spec-structure.md` — прикладные проекции и ограничения реализации.
-
-Если формулировка в этом файле конфликтует с ТЗ, необходимо приводить `spec-domain.md` в соответствие с `tz_tactical_app.md`.
 ## Роли и статус аккаунта
 
 ### Роли
