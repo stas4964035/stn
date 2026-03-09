@@ -9,7 +9,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
-import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestHeaderRequestMatcher;
 
@@ -30,7 +30,6 @@ public class SecurityConfig {
             RestAuthenticationEntryPoint restAuthenticationEntryPoint,
             RestAccessDeniedHandler restAccessDeniedHandler
     ) throws Exception {
-        http.httpBasic(Customizer.withDefaults());
         http.formLogin(Customizer.withDefaults());
 
         http.authorizeHttpRequests(auth -> auth
@@ -52,7 +51,7 @@ public class SecurityConfig {
 
         http.csrf(AbstractHttpConfigurer::disable);
 
-        http.addFilterAfter(requestLoggingFilter, BasicAuthenticationFilter.class);
+        http.addFilterAfter(requestLoggingFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
