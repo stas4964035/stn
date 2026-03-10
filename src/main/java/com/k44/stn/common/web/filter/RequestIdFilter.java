@@ -28,7 +28,6 @@ public class RequestIdFilter extends OncePerRequestFilter {
     ) throws ServletException, IOException {
 
         String requestId = request.getHeader(HEADER);
-
         if (requestId == null || requestId.isBlank()) {
             requestId = UUID.randomUUID().toString();
         }

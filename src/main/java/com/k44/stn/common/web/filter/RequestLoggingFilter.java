@@ -19,52 +19,53 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
 
     private static final Logger log = LoggerFactory.getLogger(RequestLoggingFilter.class);
 
+    private String resolveUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null ||
+                !authentication.isAuthenticated() ||
+                authentication instanceof AnonymousAuthenticationToken) {
+            return "anonymous";
+        }
+
+
+        // TODO(STN-SECURITY-JWT):
+        //  Когда будет реализована JWT-аутентификация (spec-domain: JWT HS256, sub=userId),
+        //  заменить principal на доменный userId, извлекаемый из JWT claim "sub".
+        //  Ожидаемое поведение:
+        //    - authentication.getPrincipal() должен содержать userId,
+        //    - либо кастомный JwtAuthenticationToken,
+        //    - либо собственный UserPrincipal с getUserId().
+        return authentication.getName();
+
+    }
+
     @Override
-    protected void doFilterInternal (
+    protected void doFilterInternal(
             HttpServletRequest request,
             HttpServletResponse response,
             FilterChain filterChain
     ) throws ServletException, IOException {
 
 
-        long start = System.nanoTime();
+        long start = System.currentTimeMillis();
         try {
             filterChain.doFilter(request, response);
         } finally {
-            long durationMs = (System.nanoTime() - start) / 1_000_000;
+            long durationMs = System.currentTimeMillis() - start;
 
-            String requestId = MDC.get(RequestIdFilter.MDC_KEY);
-            if(requestId == null){
-                Object attr = request.getAttribute(RequestIdFilter.MDC_KEY);
-                requestId = (attr != null) ? String.valueOf(attr) : null;
-            }
-
-            String authName = null;
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            // TODO(STN-SECURITY-JWT):
-            //  Когда будет реализована JWT-аутентификация (spec-domain: JWT HS256, sub=userId),
-            //  заменить authName на доменный userId, извлекаемый из JWT claim "sub".
-            //  Ожидаемое поведение:
-            //    - authentication.getPrincipal() должен содержать userId,
-            //    - либо кастомный JwtAuthenticationToken,
-            //    - либо собственный UserPrincipal с getUserId().
-            if (authentication != null
-                    && authentication.isAuthenticated()
-                    && !(authentication instanceof AnonymousAuthenticationToken)) {
-                authName = authentication.getName();
-            }
-
-            int status = response.getStatus();
+            String userId = resolveUserId();
             String method = request.getMethod();
             String path = request.getRequestURI();
+            int status = response.getStatus();
 
-            log.info("request_completed requestId={} principal={} method={} path={} status={} durationMs={}",
-                    requestId,
-                    authName,
+            log.info("HTTP {} {} -> {} durationMs={} userId={}",
                     method,
                     path,
                     status,
-                    durationMs);
+                    durationMs,
+                    userId
+            );
         }
     }
 }
