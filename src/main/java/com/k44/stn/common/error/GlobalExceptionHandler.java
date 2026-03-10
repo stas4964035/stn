@@ -26,6 +26,7 @@ public class GlobalExceptionHandler {
                 request,
                 Map.of()
         );
+        //TODO: реализовать логирование 500 ошибок
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
     }
 
