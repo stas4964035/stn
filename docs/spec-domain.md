@@ -286,8 +286,7 @@ Fallback к PostgreSQL допускается только при отсутст
     "errors": [
       {
         "field": "email",
-        "message": "must be a well-formed email address",
-        "code": "EMAIL_INVALID"
+        "message": "must be a well-formed email address"
       }
     ]
   }
@@ -299,8 +298,7 @@ Fallback к PostgreSQL допускается только при отсутст
 - `details.errors` — массив объектов валидационных ошибок.
 - Каждая ошибка MUST иметь вид:
   - `field: string` — имя поля (dot-path для вложенных структур),
-  - `message: string` — человекочитаемое описание,
-  - `code: string` — машинный код правила валидации.
+  - `message: string` — человекочитаемое описание.
 - Для не-валидационных ошибок `details` может быть пустым объектом `{}`.
 
 ### Канонические error codes (MVP)

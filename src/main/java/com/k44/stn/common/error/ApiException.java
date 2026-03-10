@@ -6,7 +6,7 @@ public abstract class ApiException extends RuntimeException {
     private final HttpStatus status;
     private final ErrorCode code;
 
-    protected ApiException(HttpStatus status, ErrorCode code, String message){
+    protected ApiException(HttpStatus status, ErrorCode code, String message) {
         super(message);
         this.status = status;
         this.code = code;

@@ -18,7 +18,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler
     public ResponseEntity<ErrorResponse> handleUnknown(Exception ex,
-                                                       HttpServletRequest request){
+                                                       HttpServletRequest request) {
         ErrorResponse body = factory.rest(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 ErrorCode.INTERNAL_ERROR,
@@ -31,7 +31,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ApiException.class)
     public ResponseEntity<ErrorResponse> handleApi(ApiException ex,
-                                                   HttpServletRequest request){
+                                                   HttpServletRequest request) {
         ErrorResponse body = factory.rest(
                 ex.status(),
                 ex.code(),
@@ -44,7 +44,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException ex,
-                                                          HttpServletRequest request){
+                                                          HttpServletRequest request) {
         List<Map<String, Object>> errors = ex.getBindingResult().getFieldErrors().stream()
                 .map(this::toValidationError)
                 .toList();
@@ -59,17 +59,17 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
 
-    private Map<String, Object> toValidationError(FieldError fe){
+    private Map<String, Object> toValidationError(FieldError fe) {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("field", fe.getField());
         m.put("message", fe.getDefaultMessage());
         return m;
     }
 
-    private final ErrorResponseFactory factory;
-
     public GlobalExceptionHandler(ErrorResponseFactory factory) {
         this.factory = factory;
     }
+
+    private final ErrorResponseFactory factory;
 
 }

@@ -35,7 +35,7 @@
   он может возвращать только items
 
 - Ошибки: см. `spec-domain.md` (единый формат для REST и WS).
-- Для `400 VALIDATION_ERROR` сервер MUST использовать `details.errors[]` в формате `{field, message, code}`.
+- Для `400 VALIDATION_ERROR` сервер MUST использовать `details.errors[]` в формате `{field, message}`.
 
 ## Аутентификация
 
