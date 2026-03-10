@@ -28,10 +28,4 @@ public class WebFiltersConfig {
         return bean;
     }
 
-    @Bean FilterRegistrationBean<RequestLoggingFilter> requestLoggingFilterRegistration(RequestLoggingFilter filter){
-        FilterRegistrationBean<RequestLoggingFilter> bean = new FilterRegistrationBean<>();
-        bean.setFilter(filter);
-        bean.setOrder(Ordered.HIGHEST_PRECEDENCE + 1);
-        return bean;
-    }
 }
