@@ -1,8 +1,6 @@
-package com.k44.stn.users.persistence;
+package com.k44.stn.users.domain;
 
 import com.k44.stn.common.persistence.AuditedEntity;
-import com.k44.stn.users.domain.AccountStatus;
-import com.k44.stn.users.domain.SystemRole;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -27,7 +25,7 @@ public class User extends AuditedEntity {
     }
 
     public void markDead(){
-        this.isAlive = true;
+        this.isAlive = false;
     }
 
     public void markAlive(){
