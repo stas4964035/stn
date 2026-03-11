@@ -9,3 +9,7 @@ spring:
     open-in-view: false
   flyway:
     enabled: true
+app:
+  jwt:
+    secret: "t6LCG0TgRjdvbynQggTHyWwpEiWtcRNpA4tlXUJQcd1"
+    ttl: PT24H
