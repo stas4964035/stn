@@ -4,6 +4,6 @@ import com.k44.stn.users.domain.User;
 
 public record AuthResponse(
         String token,
-        User user
+        UserDto user
 ) {
 }
