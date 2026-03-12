@@ -12,42 +12,45 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class User extends AuditedEntity {
 
-    public void delete(){
+    public static User create(String email, String passwordHash, String nickname){
+        return new User(email, passwordHash, nickname);
+    }
+
+    public void delete() {
         this.accountStatus = AccountStatus.DELETED;
     }
 
-    public void block(){
+    public void block() {
         this.accountStatus = AccountStatus.BLOCKED;
     }
 
-    public void changePasswordHash(String passwordHash){
+    public void changePasswordHash(String passwordHash) {
         this.passwordHash = passwordHash;
     }
 
-    public void markDead(){
+    public void markDead() {
         this.isAlive = false;
     }
 
-    public void markAlive(){
+    public void markAlive() {
         this.isAlive = true;
     }
 
-    public void changeAvatarIcon(String avatarIcon){
+    public void changeAvatarIcon(String avatarIcon) {
         this.avatarIcon = avatarIcon;
     }
 
-    public void changeNickname(String nickname){
+    public void changeNickname(String nickname) {
         this.nickname = nickname;
     }
 
-    public User(String email, String nickname, String passwordHash) {
+    private User(String email, String passwordHash, String nickname) {
         this.email = email;
         this.nickname = nickname;
         this.passwordHash = passwordHash;
         this.systemRole = SystemRole.USER;
         this.accountStatus = AccountStatus.ACTIVE;
         this.isAlive = true;
-
     }
 
     @Override

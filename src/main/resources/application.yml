@@ -9,6 +9,12 @@ spring:
     open-in-view: false
   flyway:
     enabled: true
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 2s
+      database: 0
 app:
   jwt:
     secret: "t6LCG0TgRjdvbynQggTHyWwpEiWtcRNpA4tlXUJQcd1"

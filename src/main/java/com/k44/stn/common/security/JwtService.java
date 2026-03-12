@@ -23,17 +23,8 @@ import java.util.Objects;
 public class JwtService {
     private final JwtProperties jwtProperties;
     private final TimeProvider timeProvider;
+    private final SecretKey jwtSigningKey;
 
-    private SecretKey signingKey;
-
-    @PostConstruct
-    void init() {
-        byte[] secretBytes = jwtProperties.secret().getBytes(StandardCharsets.UTF_8);
-        if (secretBytes.length < 32) {
-            throw new IllegalStateException("JWT secret должен быть минимум 256 байт.");
-        }
-        this.signingKey = Keys.hmacShaKeyFor(secretBytes);
-    }
 
     public String generateToken(JwtUserClaims userClaims) {
         Instant now = timeProvider.now();
@@ -46,14 +37,14 @@ public class JwtService {
                 .claim("tokenVersion", userClaims.tokenVersion())
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(expiresAt))
-                .signWith(signingKey, Jwts.SIG.HS256)
+                .signWith(jwtSigningKey, Jwts.SIG.HS256)
                 .compact();
     }
 
     public Claims parseAndValidate(String token) {
         try {
             return Jwts.parser()
-                    .verifyWith(signingKey)
+                    .verifyWith(jwtSigningKey)
                     .build()
                     .parseSignedClaims(token)
                     .getPayload();
