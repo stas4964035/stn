@@ -1,19 +1,16 @@
 package com.k44.stn.common.security;
 
-import com.k44.stn.common.error.ConflictException;
+
 import com.k44.stn.common.error.ErrorCode;
 import com.k44.stn.common.error.InvalidJwtException;
 import com.k44.stn.common.time.TimeProvider;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.Keys;
-import jakarta.annotation.PostConstruct;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
-import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Date;
 import java.util.Objects;

@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 public class RedisTokenVersionService implements TokenVersionService {
 
     private String key(Long userId){
-        return "stn:prod:auth:user-token-version:" + userId;
+        return "stn:{env}:auth:user-token-version:" + userId;
     }
 
     @Override

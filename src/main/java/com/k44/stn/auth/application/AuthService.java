@@ -44,7 +44,7 @@ public class AuthService {
     public AuthResponse login(LoginRequest request){
 
         User user = userRepository.findByEmail(request.email()).orElseThrow(()-> new NotFoundException(ErrorCode.USER_NOT_FOUND, "Пользователь с таким email не зарегистрирован"));
-        if(!passwordEncoder.matches(user.getPasswordHash(), passwordEncoder.encode(request.password()))) throw new ConflictException(ErrorCode.CONFLICT, "Неверный пароль");
+        if(!passwordEncoder.matches(request.password(), user.getPasswordHash())) throw new ConflictException(ErrorCode.CONFLICT, "Неверный пароль");
         if(user.getAccountStatus() == AccountStatus.BLOCKED) throw new ForbiddenException(ErrorCode.ACCOUNT_BLOCKED, "Аккаунт заблокирован");
         if(user.getAccountStatus() == AccountStatus.DELETED) throw new ForbiddenException(ErrorCode.ACCOUNT_DELETED, "Аккаунт удален");
         long tokenVersion = tokenVersionService.getCurrent(user.getId());
