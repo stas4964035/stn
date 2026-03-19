@@ -38,48 +38,18 @@ public class JwtService {
                 .compact();
     }
 
-    public Claims parseAndValidate(String token) {
+    public JwtUserClaims parseAndValidate(String token) {
         try {
-            return Jwts.parser()
-                    .verifyWith(jwtSigningKey)
-                    .build()
-                    .parseSignedClaims(token)
-                    .getPayload();
-        } catch (JwtException | IllegalArgumentException ex) {
+            Claims claims = Jwts.parser().verifyWith(jwtSigningKey).build().parseSignedClaims(token).getPayload();
+            Long userId = Long.valueOf(claims.getSubject());
+            String email = claims.get("email", String.class);
+            String role = claims.get("role", String.class);
+            Long tokenVersion = claims.get("tokenVersion", Long.class);
+            return new JwtUserClaims(userId, email, role, tokenVersion);
+        } catch (JwtException | IllegalArgumentException | NullPointerException ex) {
             throw new InvalidJwtException(ErrorCode.UNAUTHORIZED, "Неверный токен.");
         }
     }
 
-    public Long extractUserId(String token) {
-        try {
-            Claims claims = parseAndValidate(token);
-            return Long.valueOf(claims.getSubject());
-        } catch (RuntimeException ex) {
-            throw new InvalidJwtException(ErrorCode.UNAUTHORIZED, "Неверный токен.");
-        }
-    }
-
-    public Long extractTokenVersion(String token) {
-        try {
-            Claims claims = parseAndValidate(token);
-
-            Object value = claims.get("tokenVersion");
-            if (value instanceof Number number) {
-                return number.longValue();
-            }
-            return Long.valueOf(Objects.requireNonNull(value, "Требуется объявление tokenVersion").toString());
-        } catch (RuntimeException ex) {
-            throw new InvalidJwtException(ErrorCode.UNAUTHORIZED, "Неверный токен.");
-        }
-
-    }
-
-    public String extractEmail(String token) {
-        return parseAndValidate(token).get("email", String.class);
-    }
-
-    public String extractRole(String token) {
-        return parseAndValidate(token).get("role", String.class);
-    }
 
 }
