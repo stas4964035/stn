@@ -1,10 +1,8 @@
 package com.k44.stn.common.security;
 
 import com.k44.stn.auth.application.RedisTokenVersionService;
-import com.k44.stn.common.error.ErrorCode;
-import com.k44.stn.common.error.InvalidJwtException;
-import com.k44.stn.common.error.NotFoundException;
-import com.k44.stn.common.error.UnauthorizedException;
+import com.k44.stn.auth.domain.TokenVersionService;
+import com.k44.stn.common.error.*;
 import com.k44.stn.users.domain.AccountStatus;
 import com.k44.stn.users.domain.User;
 import com.k44.stn.users.persistence.UserRepository;
@@ -68,14 +66,17 @@ public class JwtBearerFilter extends OncePerRequestFilter {
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
             filterChain.doFilter(request, response);
-        } catch (UnauthorizedException | InvalidJwtException ex){
+        } catch (InvalidJwtException ex){
             SecurityContextHolder.clearContext();
-            throw new UnauthorizedException(ErrorCode.UNAUTHORIZED, "Ошибка авторизации");
+            throw new InvalidJwtException(ErrorCode.UNAUTHORIZED, "Ошибка авторизации");
+        } catch (UnauthorizedException ex){
+            SecurityContextHolder.clearContext();
+            throw new ForbiddenException(ErrorCode.FORBIDDEN, "Вход запрещен");
         }
     }
 
 
     private final UserRepository userRepository;
-    private final RedisTokenVersionService tokenVersionService;
+    private final TokenVersionService tokenVersionService;
     private final JwtService jwtService;
 }

@@ -1,17 +1,19 @@
 package com.k44.stn.auth.application;
 
 import com.k44.stn.auth.domain.TokenVersionService;
+import com.k44.stn.common.AppProperties;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
+@EnableConfigurationProperties(AppProperties.class)
 public class RedisTokenVersionService implements TokenVersionService {
 
     private String key(Long userId){
-        // TODO: придумать как менять окружение ключа (dev|prod)
-        return "stn:dev:auth:user-token-version:" + userId;
+        return "stn:" + appProperties.env() + ":auth:user-token-version:" + userId;
     }
 
     @Override
@@ -23,7 +25,7 @@ public class RedisTokenVersionService implements TokenVersionService {
     @Override
     public long getCurrent(Long userId) {
         Long v = redis.opsForValue().get(key(userId));
-        return v == null ? 0L : v;
+        return v == null ? 1L : v;
     }
 
     @Override
@@ -37,4 +39,5 @@ public class RedisTokenVersionService implements TokenVersionService {
     }
 
     private final RedisTemplate<String, Long> redis;
+    private final AppProperties appProperties;
 }

@@ -5,10 +5,7 @@ import com.k44.stn.auth.api.LoginRequest;
 import com.k44.stn.auth.api.RegisterRequest;
 import com.k44.stn.auth.api.UserDto;
 import com.k44.stn.auth.domain.TokenVersionService;
-import com.k44.stn.common.error.ConflictException;
-import com.k44.stn.common.error.ErrorCode;
-import com.k44.stn.common.error.ForbiddenException;
-import com.k44.stn.common.error.NotFoundException;
+import com.k44.stn.common.error.*;
 import com.k44.stn.common.security.JwtService;
 import com.k44.stn.common.security.JwtUserClaims;
 import com.k44.stn.users.domain.AccountStatus;
@@ -26,7 +23,7 @@ public class AuthService {
 
     public AuthResponse register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.email())) {
-            throw new ConflictException(ErrorCode.CONFLICT, "Пользователь с таким email уже зарегистрирован");
+            throw new UserAlreadyExistsException(ErrorCode.USER_ALREADY_EXISTS, "Пользователь с таким email уже зарегистрирован");
         }
         String hashedPassword = passwordEncoder.encode(request.password());
 
@@ -43,8 +40,8 @@ public class AuthService {
 
     public AuthResponse login(LoginRequest request){
 
-        User user = userRepository.findByEmail(request.email()).orElseThrow(()-> new NotFoundException(ErrorCode.USER_NOT_FOUND, "Пользователь с таким email не зарегистрирован"));
-        if(!passwordEncoder.matches(request.password(), user.getPasswordHash())) throw new ConflictException(ErrorCode.CONFLICT, "Неверный пароль");
+        User user = userRepository.findByEmail(request.email()).orElseThrow(()-> new NotFoundException(ErrorCode.INVALID_CREDENTIALS, "Пользователь с таким email не зарегистрирован"));
+        if(!passwordEncoder.matches(request.password(), user.getPasswordHash())) throw new InvalidCredentialsException(ErrorCode.INVALID_CREDENTIALS, "Неверный пароль");
         if(user.getAccountStatus() == AccountStatus.BLOCKED) throw new ForbiddenException(ErrorCode.ACCOUNT_BLOCKED, "Аккаунт заблокирован");
         if(user.getAccountStatus() == AccountStatus.DELETED) throw new ForbiddenException(ErrorCode.ACCOUNT_DELETED, "Аккаунт удален");
         long tokenVersion = tokenVersionService.getCurrent(user.getId());

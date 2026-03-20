@@ -18,10 +18,6 @@ import java.util.Objects;
 @Service
 @AllArgsConstructor
 public class JwtService {
-    private final JwtProperties jwtProperties;
-    private final TimeProvider timeProvider;
-    private final SecretKey jwtSigningKey;
-
 
     public String generateToken(JwtUserClaims userClaims) {
         Instant now = timeProvider.now();
@@ -50,6 +46,10 @@ public class JwtService {
             throw new InvalidJwtException(ErrorCode.UNAUTHORIZED, "Неверный токен.");
         }
     }
+
+    private final JwtProperties jwtProperties;
+    private final TimeProvider timeProvider;
+    private final SecretKey jwtSigningKey;
 
 
 }
